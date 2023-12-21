@@ -7,28 +7,44 @@ import 'package:edu_chatbot/services/chat_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/math_service.dart';
 import 'package:edu_chatbot/services/physics_service.dart';
+import 'package:edu_chatbot/services/you_tube_service.dart';
+import 'package:edu_chatbot/ui/subject_list_widget.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/functions.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
-void main() {
+import 'firebase_options.dart';
+
+Future<void> main() async {
   pp('🍎 🍎 🍎 AI ChatBuddy starting .... 🍎 🍎 🍎');
+  WidgetsFlutterBinding.ensureInitialized();
+  var app = await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  pp('🍎 🍎 🍎 Firebase has been initialized!! 🍎 🍎 🍎 name: ${app.name}');
+
   // Register services
-  registerServices();
+  await registerServices();
 
   runApp(const MyApp());
 }
 
-void registerServices() {
+Future<void> registerServices() async {
+  var lds = LocalDataService();
+  await lds.init();
+  var dioUtil = DioUtil(Dio());
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
   GetIt.instance.registerLazySingleton<ChatService>(() => ChatService());
   GetIt.instance.registerLazySingleton<AgricultureService>(() => AgricultureService());
   GetIt.instance.registerLazySingleton<PhysicsService>(() => PhysicsService());
-  GetIt.instance.registerLazySingleton<Repository>(() => Repository(DioUtil(Dio())));
+  GetIt.instance.registerLazySingleton<Repository>(() => Repository(dioUtil, lds));
   GetIt.instance.registerLazySingleton<AuthService>(() => AuthService());
   GetIt.instance.registerLazySingleton<AccountingService>(() => AccountingService());
-  GetIt.instance.registerLazySingleton<LocalDataService>(() => LocalDataService());
+  GetIt.instance.registerLazySingleton<LocalDataService>(() => lds);
+  GetIt.instance.registerLazySingleton<YouTubeService>(() => YouTubeService(dioUtil, lds));
+
 
   pp('🍎 🍎 🍎 main: GetIt has registered all the services. 🍎Cool!');
 }
@@ -39,28 +55,15 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    var repository = GetIt.instance<Repository>();
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'AI Chat Buddy',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home:  SubjectListWidget(repository: repository,),
     );
   }
 }
@@ -80,21 +83,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final Repository repository = GetIt.instance<Repository>();
   final LocalDataService localDataService = GetIt.instance<LocalDataService>();
+  final YouTubeService youTubeService = GetIt.instance<YouTubeService>();
 
   Future<void> _getTestData() async {
-    var list = await repository.getSubjects();
+    var list = await repository.getSubjects(false);
     pp("$mm  Subjects found: ${list.length} ");
-    await localDataService.addSubjects(list);
-    pp("$mm  Subjects written to local database ");
 
-    var list2 = await repository.getExamLinks(7);
+    var list2 = await repository.getExamLinks(
+        8, false);
     pp("$mm  Exam Links found: ${list2.length} ");
 
-    var localSubs = await repository.getSubjects();
-    pp("$mm Subjects found on local db: 🍔${localSubs.length} 🍔");
+    var videos = await youTubeService.searchByTag(
+        subjectId: 7, maxResults: 24, tagType: 1);
+
+    pp("$mm  YouTube Videos found: ${videos.length} ");
 
     setState(() {
-      _counter = list2.length;
+      _counter = videos.length;
     });
   }
 

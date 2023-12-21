@@ -66,7 +66,7 @@ class DioUtil {
         options: Options(responseType: ResponseType.json),
       );
 
-      pp('$mm network response: ${response.statusCode}');
+      pp('$mm network response: 🥬🥬🥬 status code: ${response.statusCode}');
       return response.data;
     } catch (e) {
       pp(e);

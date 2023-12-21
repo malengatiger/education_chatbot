@@ -101,6 +101,8 @@ PODS:
     - nanopb (< 2.30910.0, >= 2.30908.0)
     - PromisesSwift (~> 2.1)
   - Flutter (1.0.0)
+  - flutter_local_notifications (0.0.1):
+    - Flutter
   - flutter_sim_country_code (0.0.1):
     - Flutter
   - fluttertoast (0.0.2):
@@ -212,6 +214,7 @@ DEPENDENCIES:
   - firebase_crashlytics (from `.symlinks/plugins/firebase_crashlytics/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - Flutter (from `Flutter`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_sim_country_code (from `.symlinks/plugins/flutter_sim_country_code/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
@@ -265,6 +268,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_messaging/ios"
   Flutter:
     :path: Flutter
+  flutter_local_notifications:
+    :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_sim_country_code:
     :path: ".symlinks/plugins/flutter_sim_country_code/ios"
   fluttertoast:
@@ -307,6 +312,7 @@ SPEC CHECKSUMS:
   FirebaseMessaging: 9bc34a98d2e0237e1b121915120d4d48ddcf301e
   FirebaseSessions: e5f4caa188dc8bc6142abc974355be75b042215e
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_sim_country_code: 364e91e71f067cdec1dd1228eb4d1f13ab1a54e5
   fluttertoast: 31b00dabfa7fb7bacd9e7dbee580d7a2ff4bf265
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
