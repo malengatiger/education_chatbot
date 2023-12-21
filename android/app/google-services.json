@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "458451555038",
+    "project_id": "stealthcannabis",
+    "storage_bucket": "stealthcannabis.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458451555038:android:57ac1b248e133eae76a84f",
+        "android_client_info": {
+          "package_name": "com.boha.edu_chatbot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458451555038-j35vke0l5j6mh2ne1mvt5q84e4a5jk1f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnClIgwtPS-9h_zxvAFU8AL3vym4FY8Es"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458451555038-j35vke0l5j6mh2ne1mvt5q84e4a5jk1f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
