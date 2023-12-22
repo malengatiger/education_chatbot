@@ -1,4 +1,3 @@
-import 'package:edu_chatbot/data/Subject.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'exam_link.g.dart';

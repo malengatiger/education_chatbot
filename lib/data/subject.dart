@@ -1,13 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:json_annotation/json_annotation.dart';
-part 'Subject.g.dart';
+part 'subject.g.dart';
 
 @JsonSerializable()
-
 class Subject {
   int? id;
   String? title;
-
 
   Subject({@required this.id, @required this.title});
 

@@ -1,5 +1,9 @@
-import 'package:edu_chatbot/data/Subject.dart';
+import 'dart:io';
+
+import 'package:edu_chatbot/data/exam_image.dart';
+import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
+import 'package:edu_chatbot/data/exam_text.dart';
 import 'package:edu_chatbot/data/youtube_data.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -15,7 +19,7 @@ class LocalDataService {
     pp('$mm initialize sqlite ...');
 
     db = await openDatabase(
-      join(await getDatabasesPath(), 'skunk007.db'),
+      join(await getDatabasesPath(), 'skunk010.db'),
       version: 1,
     );
     pp('$mm SQLite Database is open: ${db.isOpen} 🔵🔵 ${db.path}');
@@ -119,6 +123,40 @@ class LocalDataService {
 
       }
     }
+    // Check if the "exam_texts" table exists
+    bool textTableExists = await _tableExists(
+        'exam_texts');
+    if (!textTableExists) {
+      try {
+        await db.execute('''
+                CREATE TABLE exam_texts (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  text TEXT,
+                  examLinkId INTEGER
+                )
+              ''');
+        pp('$mm Created the exam_texts table 🔵🔵');
+      } catch (e) {
+        pp('$mm exam_texts: error: 👿👿👿$e');
+      }
+    }
+    // Check if the "exam_images" table exists
+    bool imageTableExists = await _tableExists(
+        'exam_images');
+    if (!imageTableExists) {
+      try {
+        await db.execute('''
+                CREATE TABLE exam_images (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  filePath TEXT,
+                  examLinkId INTEGER
+                )
+              ''');
+        pp('$mm Created the exam_images table 🔵🔵');
+      } catch (e) {
+        pp('$mm exam_images: error: 👿👿👿$e');
+      }
+    }
   }
 
   Future<bool> _tableExists(String tableName) async {
@@ -142,6 +180,23 @@ class LocalDataService {
     return list;
   }
 
+  Future addExamImage(ExamImage image) async {
+    try {
+      await db.insert('exam_images', image.toJson());
+      pp('$mm ExamImage added to local db: ${image.filePath} ');
+    } catch (e) {
+      pp("$mm addExamImage: ERROR: 👿${e.toString()} 👿🏽");
+    }
+  }
+
+  Future addExamText(ExamText text) async {
+    try {
+      await db.insert('exam_texts', text.toJson());
+      pp('$mm exam text added to local db, ');
+    } catch (e) {
+      pp("$mm addExamText: ERROR: 👿${e.toString()} 👿🏽");
+    }
+  }
   Future addSubjects(List<Subject> subjects) async {
     pp('$mm addSubjects to sqlite ...  😎 ${subjects.length}  😎');
     int cnt = 0;
@@ -149,14 +204,14 @@ class LocalDataService {
       try {
         await db.insert('subjects', subject.toJson());
         cnt++;
-        pp('$mm subject #$cnt added to local db, '
-                  'id: 🍎${subject.id} 🔵🔵 title: ${subject.title}');
       } catch (e) {
         pp("$mm addSubjects: ERROR: 👿${e.toString()} 👿🏽");
       }
     }
+    pp('$mm subjects added to local db: '
+              '🍎$cnt 🔵🔵');
   }
-  Future addYouTubeData(List<YoutubeData> youTubeData) async {
+  Future addYouTubeData(List<YouTubeData> youTubeData) async {
     pp('$mm addYouTubeData to sqlite ...  😎 ${youTubeData.length}  😎');
     int cnt = 0;
     for (var ytd in youTubeData) {
@@ -171,20 +226,21 @@ class LocalDataService {
     }
   }
   Future addExamLinks(List<ExamLink> examLinks) async {
-    pp('$mm addSubjects to sqlite ...  😎 ${examLinks.length}  😎');
+    pp('$mm addExamLinks to sqlite ...  😎 ${examLinks.length}  😎');
     int cnt = 0;
     for (var examLink in examLinks) {
       try {
         var obj = examLink.toJson();
-        pp('$mm examLink: $obj');
         await db.insert('exam_links', obj);
         cnt++;
-        pp('$mm examLink #$cnt added to local db, '
-            'id: 🍎${examLink.id} 🔵🔵 title: ${examLink.title}');
+        // pp('$mm examLink #$cnt added to local db, '
+        //     'id: 🍎${examLink.id} 🔵🔵 title: ${examLink.title}');
       } catch (e) {
         pp("$mm addExamLinks: ERROR: 🖐🏽${e.toString()} 🖐🏽");
       }
     }
+    pp('$mm examLinks added to local db: '
+        '🍎$cnt 🔵🔵');
   }
   Future<List<ExamLink>> getExamLinksBySubject(int subjectId) async {
     List<ExamLink> list = [];
@@ -202,6 +258,58 @@ class LocalDataService {
     }
     pp('$mm getExamLinksBySubject found on local db: ${list.length}');
     return list;
+  }
+
+  Future<String?> getExamText(int examLinkId) async {
+    List<ExamText> list = [];
+    List<Map<String, dynamic>> maps = await db.query(
+      'exam_texts',
+      columns: ["id", "text"],
+      where: "examLinkId = ?",
+      whereArgs: [examLinkId],
+    );
+    if (maps.isNotEmpty) {
+      for (var element in maps) {
+        var mapWithStrings = element.cast<String, dynamic>();
+        list.add(ExamText.fromJson(mapWithStrings));
+      }
+    }
+    pp('$mm getExamText found on local db: ${list.length}');
+    String? s;
+    if (list.isNotEmpty) {
+      s = list.first.text;
+    }
+    return s;
+  }
+
+  Future<List<File>> getExamImages(int examLinkId) async {
+    List<File> files = [];
+    List<ExamImage> list = [];
+    List<Map<String, dynamic>> maps = await db.query(
+      'exam_images',
+      columns: ["id", "filePath"],
+      where: "examLinkId = ?",
+      whereArgs: [examLinkId],
+    );
+
+    if (maps.isNotEmpty) {
+      for (var element in maps) {
+        var mapWithStrings = element.cast<String, dynamic>();
+        list.add(ExamImage.fromJson(mapWithStrings));
+      }
+    }
+    for (var examImage in list) {
+      var file = File(examImage.filePath!);
+      if (file.existsSync()) {
+        files.add(file);
+      }
+    }
+    if (files.isEmpty) {
+
+    }
+
+    pp('$mm getExamImages found on local db: ${list.length}');
+    return files;
   }
 
 }

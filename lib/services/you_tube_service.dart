@@ -13,12 +13,12 @@ class YouTubeService {
 
   YouTubeService(this.dioUtil, this.localDataService);
 
-  Future<List<YoutubeData>> searchByTag({required int subjectId,
+  Future<List<YouTubeData>> searchByTag({required int subjectId,
     required int maxResults, required int tagType}) async {
     pp('$mm searchByTag: subjectId: $subjectId');
     String url = ChatbotEnvironment.getSkunkUrl();
     String mUrl = '${url}searchVideosByTag';
-    List<YoutubeData> youTubeDataList = [];
+    List<YouTubeData> youTubeDataList = [];
     var res = await dioUtil.sendGetRequest(mUrl, {
       'subjectId': subjectId,
       'maxResults': maxResults,
@@ -28,7 +28,7 @@ class YouTubeService {
 
     List<dynamic> responseData = res;
     for (var linkData in responseData) {
-      YoutubeData ytd = YoutubeData.fromJson(linkData);
+      YouTubeData ytd = YouTubeData.fromJson(linkData);
       youTubeDataList.add(ytd);
     }
 

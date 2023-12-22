@@ -8,7 +8,7 @@ import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/math_service.dart';
 import 'package:edu_chatbot/services/physics_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
-import 'package:edu_chatbot/ui/subject_list_widget.dart';
+import 'package:edu_chatbot/ui/subject_search.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -34,7 +34,7 @@ Future<void> main() async {
 Future<void> registerServices() async {
   var lds = LocalDataService();
   await lds.init();
-  var dioUtil = DioUtil(Dio());
+  var dioUtil = DioUtil(Dio(), lds);
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
   GetIt.instance.registerLazySingleton<ChatService>(() => ChatService());
   GetIt.instance.registerLazySingleton<AgricultureService>(() => AgricultureService());
@@ -58,12 +58,13 @@ class MyApp extends StatelessWidget {
     var repository = GetIt.instance<Repository>();
     return MaterialApp(
       title: 'AI Chat Buddy',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.deepOrange),
+            seedColor: Colors.pink.shade800),
         useMaterial3: true,
       ),
-      home:  SubjectListWidget(repository: repository,),
+      home:  SubjectSearch(repository: repository,),
     );
   }
 }

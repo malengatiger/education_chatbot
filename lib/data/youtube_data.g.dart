@@ -6,7 +6,7 @@ part of 'youtube_data.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-YoutubeData _$YoutubeDataFromJson(Map<String, dynamic> json) => YoutubeData(
+YouTubeData _$YouTubeDataFromJson(Map<String, dynamic> json) => YouTubeData(
       json['id'] as int?,
       json['title'] as String?,
       json['description'] as String?,
@@ -22,7 +22,7 @@ YoutubeData _$YoutubeDataFromJson(Map<String, dynamic> json) => YoutubeData(
       json['subjectId'] as int?,
     );
 
-Map<String, dynamic> _$YoutubeDataToJson(YoutubeData instance) =>
+Map<String, dynamic> _$YouTubeDataToJson(YouTubeData instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,

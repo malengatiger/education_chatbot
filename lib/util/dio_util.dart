@@ -2,20 +2,26 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
+import 'package:edu_chatbot/data/exam_image.dart';
+import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:path/path.dart' as path;
+
+import '../services/local_data_service.dart';
 
 class DioUtil {
   final Dio dio;
   static const mm = '🥬🥬🥬🥬 DioUtil 🥬';
+final LocalDataService localDataService;
+  DioUtil(this.dio, this.localDataService);
 
-  DioUtil(this.dio);
-
-  Future<List<File>> downloadAndUnpackZip(String url) async {
+  Future<List<File>> downloadAndUnpackZip(ExamLink examLink) async {
     pp('$mm Download the zipped exam images file ...');
-
+    if (examLink.pageImageZipUrl == null) {
+      throw Exception('url not on examLink');
+    }
     Response<List<int>> response = await dio.get<List<int>>(
-      url,
+      examLink.pageImageZipUrl!,
       options: Options(responseType: ResponseType.bytes),
     );
 
@@ -46,10 +52,14 @@ class DioUtil {
         extractedFile.writeAsBytesSync(file.content);
         extractedFiles.add(extractedFile);
         pp("$mm  File unpacked from zipped directory: "
-            "💙$filePath  💙length: ${extractedFile.length()} ");
+            "💙$filePath  💙length: ${await extractedFile.length()} ");
       }
     }
 
+    for (var file in extractedFiles) {
+      var img = ExamImage(examLink.id, file.path);
+      localDataService.addExamImage(img);
+    }
     pp("$mm  Files unpacked from zipped directory: "
         " 💙 ${extractedFiles.length} image files");
     return extractedFiles;
@@ -99,6 +109,8 @@ class DioUtil {
       pp('$mm .... network POST response, 💚status code: ${response.statusCode} 💚💚');
       return response.data;
     } catch (e) {
+      pp('$mm .... network POST error response, '
+          '👿👿👿👿 $e 👿👿👿👿');
       pp(e);
       rethrow;
     }

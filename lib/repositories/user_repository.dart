@@ -1,10 +1,8 @@
-import 'package:edu_chatbot/data/Subject.dart';
+import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/environment.dart';
-import 'package:get_it/get_it.dart';
 
-import '../data/exam_link.dart';
 import '../data/user.dart';
 import '../util/functions.dart';
 
@@ -22,7 +20,6 @@ class UserRepository {
   }
 
   Future<List<User>> getUsers(String organizationId) async {
-    var list = <User>[];
 
       return [];
 
