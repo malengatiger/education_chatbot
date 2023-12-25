@@ -4,12 +4,21 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 
+import '../services/chat_service.dart';
+import '../services/local_data_service.dart';
 import 'exam_link_list_widget.dart';
+import 'image_picker_widget.dart';
 
 class SubjectSearch extends StatefulWidget {
   final Repository repository;
+  final LocalDataService localDataService;
+  final ChatService chatService;
 
-  const SubjectSearch({super.key, required this.repository});
+  const SubjectSearch(
+      {super.key,
+      required this.repository,
+      required this.localDataService,
+      required this.chatService});
 
   @override
   SubjectSearchState createState() => SubjectSearchState();
@@ -48,6 +57,59 @@ class SubjectSearchState extends State<SubjectSearch> {
     });
   }
 
+  _navigateToAI(BuildContext context) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 1000),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+             ImagePickerWidget(chatService: widget.chatService,),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          var begin = const Offset(1.0, 0.0);
+          var end = Offset.zero;
+          var curve = Curves.ease;
+
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  navigateToExamLinkListWidget(BuildContext context, Subject subject) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 1000),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ExamLinkListWidget(
+          subject: subject,
+          repository: widget.repository,
+          localDataService: widget.localDataService,
+          chatService: widget.chatService,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          var begin = const Offset(1.0, 0.0);
+          var end = Offset.zero;
+          var curve = Curves.ease;
+
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -72,6 +134,12 @@ class SubjectSearchState extends State<SubjectSearch> {
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.refresh),
+              ),
+              IconButton(
+                onPressed: () {
+                  _navigateToAI(context);
+                },
+                icon: const Icon(Icons.camera),
               )
             ],
           ),
@@ -102,8 +170,9 @@ class SubjectSearchState extends State<SubjectSearch> {
                       style: const TextStyle(color: Colors.white),
                     ),
                     badgeStyle: bd.BadgeStyle(
-                    padding: const EdgeInsets.all(8.0),
-                        badgeColor: Colors.pink.shade800, elevation: 12),
+                        padding: const EdgeInsets.all(8.0),
+                        badgeColor: Colors.pink.shade800,
+                        elevation: 12),
                     child: ListView.builder(
                       itemCount: _filteredSubjects.length,
                       itemBuilder: (context, index) {
@@ -132,33 +201,6 @@ class SubjectSearchState extends State<SubjectSearch> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  navigateToExamLinkListWidget(BuildContext context, Subject subject) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 500),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            ExamLinkListWidget(
-          subject: subject,
-          repository: widget.repository,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var begin = const Offset(1.0, 0.0);
-          var end = Offset.zero;
-          var curve = Curves.ease;
-
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
       ),
     );
   }

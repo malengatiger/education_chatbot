@@ -9,8 +9,13 @@ class ExamImage {
   int? id;
   String? filePath;
 
+  List<int>? bytes;
 
-  ExamImage(this.examLinkId, this.filePath);
+  int? imageIndex;
+
+
+  ExamImage(
+      this.examLinkId, this.filePath, this.bytes, this.imageIndex);
 
   factory ExamImage.fromJson(Map<String, dynamic> json) =>
       _$ExamImageFromJson(json);

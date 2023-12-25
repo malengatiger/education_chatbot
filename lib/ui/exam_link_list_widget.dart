@@ -2,21 +2,25 @@ import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/services/chat_service.dart';
+import 'package:edu_chatbot/ui/exam_paper_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 
+import '../services/local_data_service.dart';
 import '../util/functions.dart';
-import 'exam_paper_text_widget.dart';
+import 'text_prompt.dart';
 
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
   final Repository repository;
-
+  final LocalDataService localDataService;
+  final ChatService chatService;
   const ExamLinkListWidget({
     super.key,
     required this.subject,
-    required this.repository,
+    required this.repository, required this.localDataService, required this.chatService,
   });
 
   @override
@@ -53,7 +57,10 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       });
     } catch (e) {
       // Handle error
-      pp('Error fetching exam links: $e');
+      pp('$mm 👿👿👿👿👿Error fetching exam links: $e');
+      if (mounted) {
+        showErrorDialog(context, 'Failed to get exam data');
+      }
     }
   }
 
@@ -87,7 +94,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
           color: Theme.of(context).primaryColor,
         ),
         onPressed: () {
-          _navigateToExamPaperTextAndImages(examLink);
+          _navigateToExamPaperPages(examLink);
         }));
     list.add(FocusedMenuItem(
         title:
@@ -168,8 +175,6 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
                     itemCount: filteredExamLinks.length,
                     itemBuilder: (context, index) {
                       ExamLink examLink = filteredExamLinks[index];
-                      pp('$mm examLink selected, id: ${examLink.id} '
-                          'title: ${examLink.title}');
                       return FocusedMenuHolder(
                         menuItems: _getMenuItems(examLink, context),
                         menuOffset: 20,
@@ -199,18 +204,28 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ExamPaperTextWidget(
-          examLink: examLink,
-          repository: widget.repository,
+        builder: (context) => TextPrompt(
+          examLink: examLink, chatService: widget.chatService,
+          repository: widget.repository, localDataService: widget.localDataService,
         ),
       ),
     );
   }
 
-  void _navigateToExamPaperTextAndImages(ExamLink examLink) {
-    pp('$mm _navigateToExamPaperTextAndImages ...');
-
-    // Handle 'Use Text and Images' option
+  void _navigateToExamPaperPages(ExamLink examLink) {
+    pp('$mm _navigateToExamPaperPages ...');
+    examLink.subjectTitle = widget.subject.title;
+    examLink.subjectId = widget.subject.id;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ExamPaperPages(
+          examLink: examLink,
+          repository: widget.repository,
+          chatService: widget.chatService,
+        ),
+      ),
+    );
   }
   void _navigateToYouTube(ExamLink examLink) {
     pp('$mm _navigateToYouTube ...');

@@ -25,6 +25,7 @@ dependencies:
   infinite_carousel: ^1.0.3
   intl: ^0.19.0
   path: ^1.8.3
+  path_provider: ^2.1.1
   flutter_file_downloader: ^1.2.0
   get_it: ^7.6.4
   watch_it: ^1.1.0
@@ -56,6 +57,11 @@ dependencies:
   badges: ^3.1.2
   focused_menu: ^1.0.5
   carousel_slider: ^4.2.1
+  http: ^1.1.2
+  webview_flutter: ^4.4.2
+  flutter_rating_bar: ^4.0.1
+  image_picker: ^1.0.5
+
 
 dev_dependencies:
   flutter_test:

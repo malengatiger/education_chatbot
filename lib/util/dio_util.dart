@@ -15,55 +15,6 @@ class DioUtil {
 final LocalDataService localDataService;
   DioUtil(this.dio, this.localDataService);
 
-  Future<List<File>> downloadAndUnpackZip(ExamLink examLink) async {
-    pp('$mm Download the zipped exam images file ...');
-    if (examLink.pageImageZipUrl == null) {
-      throw Exception('url not on examLink');
-    }
-    Response<List<int>> response = await dio.get<List<int>>(
-      examLink.pageImageZipUrl!,
-      options: Options(responseType: ResponseType.bytes),
-    );
-
-    // Create a temporary directory to extract the zip file
-    Directory tempDir = await Directory.systemTemp.createTemp();
-    String tempPath = tempDir.path;
-
-    // Save the downloaded zip file to the temporary directory
-
-    String zipFilePath = path.join(tempPath, 'images_"++".zip');
-    File zipFile = File(zipFilePath);
-    if (response.data != null) {
-      await zipFile.writeAsBytes(response.data!, flush: true);
-    }
-
-    // Extract the zip file
-    pp("$mm  Extract the image files from zipped directory: "
-        " 💙 $zipFilePath ${(zipFile.length)} bytes");
-
-    Archive archive = ZipDecoder().decodeBytes(zipFile.readAsBytesSync());
-    List<File> extractedFiles = [];
-
-    for (ArchiveFile file in archive) {
-      if (file.isFile) {
-        String filePath = path.join(tempPath, file.name);
-        File extractedFile = File(filePath);
-        extractedFile.createSync(recursive: true);
-        extractedFile.writeAsBytesSync(file.content);
-        extractedFiles.add(extractedFile);
-        pp("$mm  File unpacked from zipped directory: "
-            "💙$filePath  💙length: ${await extractedFile.length()} ");
-      }
-    }
-
-    for (var file in extractedFiles) {
-      var img = ExamImage(examLink.id, file.path);
-      localDataService.addExamImage(img);
-    }
-    pp("$mm  Files unpacked from zipped directory: "
-        " 💙 ${extractedFiles.length} image files");
-    return extractedFiles;
-  }
 
   Future<dynamic> sendGetRequest(
       String path, Map<String, dynamic> queryParameters) async {

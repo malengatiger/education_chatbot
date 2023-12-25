@@ -32,14 +32,17 @@ Future<void> main() async {
 }
 
 Future<void> registerServices() async {
+  pp('🍎 🍎 🍎 main: initialize service singletons with GetIt .... 🍎');
+
   var lds = LocalDataService();
   await lds.init();
-  var dioUtil = DioUtil(Dio(), lds);
+  Dio dio = Dio();
+  var dioUtil = DioUtil(dio, lds);
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
-  GetIt.instance.registerLazySingleton<ChatService>(() => ChatService());
+  GetIt.instance.registerLazySingleton<ChatService>(() => ChatService(dioUtil));
   GetIt.instance.registerLazySingleton<AgricultureService>(() => AgricultureService());
   GetIt.instance.registerLazySingleton<PhysicsService>(() => PhysicsService());
-  GetIt.instance.registerLazySingleton<Repository>(() => Repository(dioUtil, lds));
+  GetIt.instance.registerLazySingleton<Repository>(() => Repository(dioUtil, lds, dio));
   GetIt.instance.registerLazySingleton<AuthService>(() => AuthService());
   GetIt.instance.registerLazySingleton<AccountingService>(() => AccountingService());
   GetIt.instance.registerLazySingleton<LocalDataService>(() => lds);
@@ -51,91 +54,34 @@ Future<void> registerServices() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+  void _dismissKeyboard(BuildContext context) {
+    final currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus && currentFocus.hasFocus) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+  }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     var repository = GetIt.instance<Repository>();
-    return MaterialApp(
-      title: 'AI Chat Buddy',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.pink.shade800),
-        useMaterial3: true,
-      ),
-      home:  SubjectSearch(repository: repository,),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  static const mm = '💙💙💙💙 MyHomePage 💙';
-
-  final Repository repository = GetIt.instance<Repository>();
-  final LocalDataService localDataService = GetIt.instance<LocalDataService>();
-  final YouTubeService youTubeService = GetIt.instance<YouTubeService>();
-
-  Future<void> _getTestData() async {
-    var list = await repository.getSubjects(false);
-    pp("$mm  Subjects found: ${list.length} ");
-
-    var list2 = await repository.getExamLinks(
-        8, false);
-    pp("$mm  Exam Links found: ${list2.length} ");
-
-    var videos = await youTubeService.searchByTag(
-        subjectId: 7, maxResults: 24, tagType: 1);
-
-    pp("$mm  YouTube Videos found: ${videos.length} ");
-
-    setState(() {
-      _counter = videos.length;
-    });
-  }
-
-  void getSubjects() {
-
-  }
-  @override
-  Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(
-
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 64, fontWeight: FontWeight.w900),
-            ),
-          ],
+    return GestureDetector(
+      onTap: () {
+        pp('main: ... dismiss keyboard? Tapped somewhere ...');
+        _dismissKeyboard(context);
+      },
+      child: MaterialApp(
+        title: 'SgelaAI',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple.shade800),
+          useMaterial3: true,
         ),
+        home:  SubjectSearch(repository: repository,
+          localDataService: GetIt.instance<LocalDataService>(),
+          chatService: GetIt.instance<ChatService>(),),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _getTestData,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

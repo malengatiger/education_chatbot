@@ -2,116 +2,69 @@ import 'dart:io';
 
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:flutter/material.dart';
 
-import '../util/functions.dart';
+import '../data/gemini/gemini_response.dart';
+import '../services/chat_service.dart';
+import '../util/functions.dart' as fun;
+import 'exam_paper_header.dart';
 
-class ExamPaperTextWidget extends StatefulWidget {
+class TextPrompt extends StatefulWidget {
   final Repository repository;
   final ExamLink examLink;
+  final LocalDataService localDataService;
+  final ChatService chatService;
 
-  const ExamPaperTextWidget({
+  const TextPrompt({
     super.key,
     required this.repository,
-    required this.examLink,
+    required this.examLink, required this.localDataService, required this.chatService,
   });
 
   @override
-  ExamPaperTextWidgetState createState() => ExamPaperTextWidgetState();
+  TextPromptState createState() => TextPromptState();
 }
 
-class ExamPaperTextWidgetState extends State<ExamPaperTextWidget> {
+class TextPromptState extends State<TextPrompt> {
   String? _examPaperText = '';
   String _textSelected = '';
-  static const mm = '🍔🍔🍔🍔ExamPaperTextWidget 🍎';
+  static const mm = '🍔🍔🍔🍔 TextPrompt 🍎';
+  Future<void> _searchText() async {
+    fun.pp('$mm _searchText ... do something with _textSelected:'
+        '\n $_textSelected');
 
-  void _fetchExamPaperText() async {
-    pp('$mm ... _fetchExamPaperText ...');
-    try {
-      String? text = await widget.repository.extractExamPaperText(
-        widget.examLink.id!,
-        false,
-      );
-      if (text != null) {
-        pp('$mm text extracted, length: ${text.length}');
-      }
-      setState(() {
-        _examPaperText = text;
-      });
-    } catch (e) {
-      // Handle error
-      pp('Error fetching exam paper text: $e');
-    }
-  }
+    GeminiResponse gResponse = await widget.chatService.sendTextPrompt('Help!');
+    fun.pp('$mm Gemini AI says: ${gResponse.candidates?[0].toJson()}');
 
-  List<File> examImages = [];
-  _fetchExamImages() async {
-      examImages = await widget.repository.extractImages(
-          widget.examLink, false);
-      setState(() {
-
-      });
-  }
-
-  void _searchText() {
-    pp('$mm _searchText ... do something with _examPaperText:'
-        '\n $_examPaperText');
-
-    // Execute search logic here
-    // This method will be called when the Submit Search button is pressed
   }
 
   @override
   void initState() {
     super.initState();
-    _fetchExamPaperText();
-    _fetchExamImages();
+    _examPaperText = widget.examLink.examText;
   }
 
   @override
   Widget build(BuildContext context) {
     final TextStyle titleStyle =
-    Theme.of(context).textTheme.bodyLarge!.copyWith(
-      fontWeight: FontWeight.w900,
-    );
+        Theme.of(context).textTheme.bodyLarge!.copyWith(
+              fontWeight: FontWeight.w900,
+            );
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exam Paper Text'),
+        title: Text('Exam Paper Text', style: titleStyle,),
+        bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(140),
+            child: Column(
+              children: [
+                ExamPaperHeader(examLink: widget.examLink, onClose: () {  },),
+              ],
+            )),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Card(
-                    elevation: 8,
-                    child: SizedBox(height: 100,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              children: [
-                                const Text('Number of Characters'),
-                                const SizedBox(
-                                  width: 8,
-                                ),
-                                Text('${_textSelected.length}', style: titleStyle,)
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                ],
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Card(
@@ -127,7 +80,7 @@ class ExamPaperTextWidgetState extends State<ExamPaperTextWidget> {
                           selection.baseOffset,
                           selection.extentOffset,
                         );
-                        pp('$mm selectedText: $selectedText');
+                        fun.pp('$mm selectedText: $selectedText');
 
                         setState(() {
                           _textSelected = selectedText;
@@ -174,3 +127,5 @@ class ExamPaperTextWidgetState extends State<ExamPaperTextWidget> {
     );
   }
 }
+
+

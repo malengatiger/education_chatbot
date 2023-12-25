@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Edu Chatbot</string>
+	<string>SgelaAI</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -50,5 +50,9 @@
         <key>NSAllowsArbitraryLoads</key> <true/>
       </dict>
     <key>io.flutter.embedded_views_preview</key> <true/>
+    <key>NSCameraUsageDescription</key>
+    <string>Access to the camera is required to capture photos.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Access to the photo library is required to pick photos.</string>
 </dict>
 </plist>

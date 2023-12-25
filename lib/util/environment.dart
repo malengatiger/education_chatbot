@@ -7,7 +7,7 @@ class ChatbotEnvironment {
   //TODO - refresh url links after Skunk deployment
 
   //💙Chatbot Backend
-  static const _devGeminiUrl = 'http://192.168.86.242:3008/api/v1/';
+  static const _devGeminiUrl = 'http://192.168.86.242:3012/';
   static const _prodGeminiUrl = 'https://kasie-nest-3-umrjnxdnuq-ew.a.run.app/api/v1/';
   //TODO - refresh url links after Gemini deployment
 

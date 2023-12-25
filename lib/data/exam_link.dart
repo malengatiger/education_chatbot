@@ -11,10 +11,11 @@ class ExamLink {
   int? subjectId;
   String? pageImageZipUrl;
   String? documentTitle;
+  String? examText;
 
 
   ExamLink(this.title, this.link, this.id, this.subjectTitle, this.subjectId,
-      this.pageImageZipUrl, this.documentTitle);
+      this.pageImageZipUrl, this.documentTitle, this.examText);
 
   factory ExamLink.fromJson(Map<String, dynamic> json) =>
       _$ExamLinkFromJson(json);

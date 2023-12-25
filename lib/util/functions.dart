@@ -34,6 +34,25 @@ pp(dynamic msg) {
   }
 }
 
+void showErrorDialog(BuildContext context, String errorMessage) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Error'),
+        content: Text(errorMessage),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
 Future<String> getFmtDate(String date, String locale) async {
   await initializeDateFormatting("en", "somefile");
   String mLocale = getValidLocale(locale);
@@ -559,10 +578,10 @@ TextStyle myTextStyleMediumLargeWithSize(BuildContext context, double size) {
 }
 
 TextStyle myTextStyleMediumLargeWithColor(
-    BuildContext context, Color color, double size) {
+    BuildContext context, Color color, double size, FontWeight? fontWeight) {
   return GoogleFonts.roboto(
       textStyle: Theme.of(context).textTheme.headlineLarge,
-      fontWeight: FontWeight.w900,
+      fontWeight: fontWeight?? FontWeight.w900,
       color: color,
       fontSize: size);
 }
