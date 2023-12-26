@@ -6,8 +6,10 @@ import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/ui/exam_paper_header.dart';
 import 'package:edu_chatbot/ui/gemini_response_viewer.dart';
+import 'package:edu_chatbot/ui/math_viewer.dart';
 import 'package:edu_chatbot/ui/pdf_viewer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tex/flutter_tex.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import '../data/exam_image.dart';
@@ -309,13 +311,15 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     );
   }
 
+  _navigateToMathViewer(String text) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MathViewer(text: text)),
+    );
+  }
+
   _onSubmit() async {
     pp('$mm submitting the whole thing to Gemini AI : image files: ${selectedImages.length}');
-
-    List<File> files = [];
-    for (var image in selectedImages) {
-      files.add(File(image.filePath!));
-    }
 
     setState(() {
       busy = true;
@@ -324,10 +328,16 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     String mPrompt = getPrompt(widget.examLink.subjectTitle!);
     GeminiResponse? response;
     try {
-      response = await widget.chatService.sendImageTextPrompt(files, mPrompt);
+      response =
+          await widget.chatService.sendImageTextPrompt(selectedImages, mPrompt);
       pp('$mm 😎 😎 😎 Gemini AI has responded! see below .... 😎 😎 😎');
       myPrettyJsonPrint(response.toJson());
-      _navigateToGeminiResponse(response);
+      String text = getResponseString(response);
+      if (isValidLaTeXString(text)) {
+        _navigateToMathViewer(text);
+      } else {
+        _navigateToGeminiResponse(response);
+      }
     } catch (e) {
       pp('$mm ERROR $e');
       if (mounted) {
@@ -339,6 +349,32 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     }
 
     //_onShowPagesToast();
+  }
+
+  String getResponseString(GeminiResponse geminiResponse) {
+    var sb = StringBuffer();
+    geminiResponse.candidates?.forEach((candidate) {
+      for (var parts in candidate.content!.parts!) {
+        sb.write(parts.text);
+        sb.write("\n");
+      }
+    });
+    return sb.toString();
+  }
+
+  bool isValidLaTeXString(String text) {
+    try {
+      // Create a TeXView widget with the given text
+      TeXView(
+        renderingEngine: const TeXViewRenderingEngine.katex(),
+        child: TeXViewDocument(text),
+      );
+      // If no exception is thrown, the rendering is successful
+      return true;
+    } catch (e) {
+      // An exception occurred, indicating an invalid LaTeX string
+      return false;
+    }
   }
 
   String getPrompt(String subject) {

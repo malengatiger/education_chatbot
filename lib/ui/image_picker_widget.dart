@@ -39,14 +39,15 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
         ' images: ${_images.length}');
 
     try {
-      var rr = await widget.chatService.sendImageTextPrompt(_images, 'Tell me what you see');
+      var rr = await widget.chatService
+          .sendGenericImageTextPrompt(_images.first, 'Tell me what you see');
       pp('$mm _sendImageToAI: ...... Gemini AI has responded! ');
 
       pp('$mm ... ${rr.toJson()}');
     } catch (e) {
-      pp(e);
+      pp('$mm ERROR $e');
       if (mounted) {
-        showErrorDialog(context, 'Fell down, Boss!');
+        showErrorDialog(context, 'Fell down, Boss! 🍎 $e');
       }
     }
   }

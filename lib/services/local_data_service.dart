@@ -178,7 +178,7 @@ class LocalDataService {
   Future<List<ExamImage>> addExamImage(ExamImage image) async {
     try {
       await db.insert('exam_images', image.toJson());
-      pp('$mm ExamImage added to local 🍎🍎 db: ${image.filePath} ');
+      pp('$mm ExamImage added to local database 🍎🍎 ');
       return getExamImages(image.examLinkId!);
     } catch (e) {
       pp("$mm addExamImage: ERROR: 👿${e.toString()} 👿🏽");
