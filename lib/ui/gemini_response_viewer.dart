@@ -44,8 +44,8 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
       ),
       onRatingUpdate: (rating) {
         pp('🍎🍎🍎 onRatingUpdate: rating: 🍎$rating 🍎');
-        Future.delayed(const Duration(seconds: 2), (){
-          setState((){
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {
             _showRatingBar = false;
           });
         });
@@ -57,40 +57,45 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-      appBar: AppBar(
-        title: const Text("SgelaAI Response"),
-      ),
-      backgroundColor: Colors.brown.shade100,
-      body: Stack(
-        children: [
-          ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Card(
-                    elevation: 8,
-                    shape: getDefaultRoundedBorder(),
-                    child: Padding(
+            appBar: AppBar(
+              title: const Text("SgelaAI Response"),
+            ),
+            backgroundColor: Colors.brown.shade100,
+            body: Stack(
+              children: [
+                ListView(
+                  children: [
+                    Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text(getResponseString(), style: myTextStyleMediumLargeWithColor(
-                          context, Theme.of(context).primaryColor, 20, FontWeight.normal)),
-                    )),
-              ),
-            ],
-          ),
-          _showRatingBar? Positioned(
-              bottom: 12,
-              right: 48,
-              child: Card(
-                elevation: 16,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: getRatingWidget(),
+                      child: Card(
+                          elevation: 8,
+                          shape: getDefaultRoundedBorder(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(getResponseString(),
+                                style: myTextStyleMediumLargeWithColor(
+                                    context,
+                                    Theme.of(context).primaryColor,
+                                    16,
+                                    FontWeight.normal)),
+                          )),
+                    ),
+                  ],
                 ),
-              ),
-          ): gapW8,
-        ],
-      )
-    ));
+                _showRatingBar
+                    ? Positioned(
+                        bottom: 12,
+                        right: 48,
+                        child: Card(
+                          elevation: 16,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: getRatingWidget(),
+                          ),
+                        ),
+                      )
+                    : gapW8,
+              ],
+            )));
   }
 }

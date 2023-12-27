@@ -1,16 +1,16 @@
+import 'dart:async';
 import 'dart:io';
 
-import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/environment.dart';
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 
-import '../data/exam_image.dart';
 import '../data/exam_link.dart';
+import '../data/exam_page_image.dart';
 import '../util/functions.dart';
 
 class Repository {
@@ -22,6 +22,58 @@ class Repository {
   static const mm = '💦💦💦💦 Repository 💦';
 
   Repository(this.dioUtil, this.localDataService, this.dio);
+
+  Future<List<ExamPageImage>> getExamImages(int examLinkId) async {
+    pp('$mm ... getExamPageImages ....');
+    List<ExamPageImage> images = [];
+    try {
+      images = await localDataService.getExamImages(examLinkId);
+      if (images.isNotEmpty) {
+        pp('$mm ... getExamPageImages .... from local store: ${images.length}');
+        return images;
+      }
+      String urlPrefix = ChatbotEnvironment.getSkunkUrl();
+      var path = '${urlPrefix}links/getExamPageImages';
+      List res = await dioUtil.sendGetRequest(path, {'examLinkId': examLinkId});
+      for (var r in res) {
+        var map = {
+          'examLinkId': r['examLink']['id'],
+          'downloadUrl': r['downloadUrl'],
+          'pageIndex': r['pageIndex'],
+          'mimeType': r['mimeType'],
+          'id': r['id']
+        };
+        images.add(ExamPageImage.fromJson(map));
+      }
+      int index = 1;
+      for (var img in images) {
+        img.bytes = await downloadFile(img.downloadUrl!);
+        await localDataService.addExamImage(img);
+        _streamController.sink.add(index);
+        index++;
+      }
+      pp('$mm ... getExamPageImages .... from remote store: ${images.length}');
+
+      return images;
+    } catch (e) {
+      // Handle any errors
+      pp('Error calling addExamImage API: $e');
+      rethrow;
+    }
+  }
+  final StreamController<int> _streamController = StreamController.broadcast();
+  Stream<int> get pageStream => _streamController.stream;
+  static Future<List<int>> downloadFile(String url) async {
+    pp('$mm downloading file from ... $url');
+    try {
+      var response = await http.get(Uri.parse(url));
+      var bytes = response.bodyBytes;
+      return bytes;
+    } catch (e) {
+      pp('Error downloading file: $e');
+      rethrow;
+    }
+  }
 
   Future<List<Subject>> getSubjects(bool refresh) async {
     var list = <Subject>[];
@@ -36,28 +88,6 @@ class Repository {
       }
 
       pp("$mm Subjects found: ${list.length} ");
-
-      return list;
-    } catch (e) {
-      pp(e);
-      rethrow;
-    }
-  }
-
-  Future<List<ExamImage>> extractImages(ExamLink link, bool refresh) async {
-    pp('$mm extractImages ....');
-    var list = <ExamImage>[];
-    try {
-      if (refresh) {
-        var files = await _downloadImages(link);
-        pp("$mm Image files found locally: ${list.length} ");
-      } else {
-        list = await localDataService.getExamImages(link.id!);
-        if (list.isEmpty) {
-          list = await _downloadImages(link);
-          pp("$mm Image files downloaded: ${list.length} ");
-        }
-      }
 
       return list;
     } catch (e) {
@@ -88,19 +118,19 @@ class Repository {
     }
   }
 
-  Future<List<ExamImage>> getExamImages(ExamLink examLink) async {
-    List<ExamImage> examImages = [];
-
-    var localImages = await localDataService.getExamImages(examLink.id!);
-    if (localImages.isNotEmpty) {
-      return localImages;
-    }
-    pp('$mm getExamImages: starting image file download ...');
-    examImages = await _downloadImages(examLink);
-
-    pp('$mm getExamImages: image file downloaded: ${examImages.length} ...');
-    return examImages;
-  }
+  // Future<List<ExamPageImage>> getExamImages(ExamLink examLink) async {
+  //   List<ExamPageImage> examImages = [];
+  //
+  //   var localImages = await localDataService.getExamImages(examLink.id!);
+  //   if (localImages.isNotEmpty) {
+  //     return localImages;
+  //   }
+  //   pp('$mm getExamImages: starting image file download ...');
+  //   examImages = await _downloadImages(examLink);
+  //
+  //   pp('$mm getExamImages: image file downloaded: ${examImages.length} ...');
+  //   return examImages;
+  // }
 
   Future<List<ExamLink>> _downloadExamLinks(int subjectId) async {
     pp('$mm downloading examLinks ...');
@@ -155,18 +185,6 @@ class Repository {
     return subjects;
   }
 
-  Future<List<ExamImage>> _downloadImages(ExamLink examLink) async {
-    pp('$mm _downloadImages: extract images ...');
-    var url = ChatbotEnvironment.getSkunkUrl();
-    var res = await dioUtil.sendGetRequest(
-        '${url}pdf/createPdfPageImages', {'examLinkId': examLink.id!});
-
-    var newExamLink = ExamLink.fromJson(res);
-    var files = await _downloadAndUnpackZip(newExamLink);
-    pp("$mm _downloadImages: Image files found: ${files.length} ");
-    return files;
-  }
-
   Future<File> downloadOriginalExamPDF(ExamLink examLink) async {
     //todo - check if exists
     Response<List<int>> response = await dio.get<List<int>>(
@@ -190,76 +208,5 @@ class Repository {
     pp("$mm  Exam pdf file saved "
         " 💙 $pdfPath length: ${(pdfFile.length)} bytes");
     return pdfFile;
-  }
-
-  Future<List<ExamImage>> _downloadAndUnpackZip(ExamLink examLink) async {
-    pp('$mm Download the zipped exam images file ...');
-    if (examLink.pageImageZipUrl == null) {
-      throw Exception('pageImageZipUrl is null! not on examLink');
-    }
-
-    List<File> extractedFiles = [];
-    await _handleUncompress(examLink, extractedFiles);
-    List<ExamImage> list = await localDataService.getExamImages(examLink.id!);
-
-    return list;
-  }
-
-  Future<File> _handleUncompress(
-      ExamLink examLink, List<File> extractedFiles) async {
-    Response<List<int>> response = await dio.get<List<int>>(
-      examLink.pageImageZipUrl!,
-      options: Options(responseType: ResponseType.bytes),
-    );
-
-    // Create a temporary directory to extract the zip file
-    pp('$mm Create a permanent directory to extract the zip file ...');
-    File zipFile;
-
-    // Get the app's documents directory
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-
-    // Create a subdirectory within the documents directory
-    Directory subDirectory =
-        Directory('${documentsDirectory.path}/examLink_${examLink.id}');
-    if (!await subDirectory.exists()) {
-      await subDirectory.create(recursive: true);
-    }
-    pp('$mm permanent directory created: ${subDirectory.path} ...');
-    // Save the downloaded zip file to the temporary directory
-
-    String zipFilePath =
-        path.join(subDirectory.path, 'images_${examLink.id}.zip');
-    zipFile = File(zipFilePath);
-    if (response.data != null) {
-      await zipFile.writeAsBytes(response.data!, flush: true);
-    }
-
-    // Extract the zip file
-    pp("$mm  Extract the image files from zipped directory: "
-        " 💙💙💙💙💙 $zipFilePath ${(await zipFile.length())} bytes");
-
-    Archive archive = ZipDecoder().decodeBytes(zipFile.readAsBytesSync());
-
-    int index = 0;
-    for (ArchiveFile file in archive) {
-      if (file.isFile) {
-        String filePath = path.join(subDirectory.path, file.name);
-        File extractedFile = File(filePath);
-        extractedFile.createSync(recursive: true);
-        extractedFile.writeAsBytesSync(file.content);
-        pp("$mm  File unpacked from zipped directory: "
-            "💙index: $index  💙length: ${await extractedFile.length()} bytes");
-        //
-        var examImage =
-            ExamImage(examLink.id, extractedFile.path, file.content, index);
-        await localDataService.addExamImage(examImage);
-        extractedFiles.add(extractedFile);
-        index++;
-      }
-    }
-    pp("$mm  Image files from zipped directory: "
-        " 💙💙💙💙💙  ${(extractedFiles.length)} files");
-    return zipFile;
   }
 }

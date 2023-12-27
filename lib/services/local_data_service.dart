@@ -1,4 +1,6 @@
-import 'package:edu_chatbot/data/exam_image.dart';
+import 'dart:async';
+
+import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/data/youtube_data.dart';
@@ -16,7 +18,7 @@ class LocalDataService {
     pp('$mm initialize sqlite ...');
 
     db = await openDatabase(
-      join(await getDatabasesPath(), 'skunk025db'),
+      join(await getDatabasesPath(), 'skunk034db'),
       version: 1,
     );
     pp('$mm SQLite Database is open: ${db.isOpen} 🔵🔵 ${db.path}');
@@ -137,12 +139,13 @@ class LocalDataService {
       try {
         await db.execute('''
                 CREATE TABLE exam_images (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  filePath TEXT,
+                  id INTEGER PRIMARY KEY,
+                  downloadUrl TEXT,
+                  mimeType VARCHAR(6),
                   bytes BLOB,
                   examLinkId INTEGER,
-                  imageIndex INTEGER,
-                  UNIQUE(examLinkId, imageIndex) ON CONFLICT REPLACE
+                  pageIndex INTEGER,
+                  UNIQUE(examLinkId, pageIndex) ON CONFLICT REPLACE
 
                 )
               ''');
@@ -175,15 +178,13 @@ class LocalDataService {
     return list;
   }
 
-  Future<List<ExamImage>> addExamImage(ExamImage image) async {
+  Future<void> addExamImage(ExamPageImage image) async {
     try {
       await db.insert('exam_images', image.toJson());
-      pp('$mm ExamImage added to local database 🍎🍎 ');
-      return getExamImages(image.examLinkId!);
+      pp('$mm ExamImage added to local database 🍎🍎 pageIndex: ${image.pageIndex}');
     } catch (e) {
       pp("$mm addExamImage: ERROR: 👿${e.toString()} 👿🏽");
     }
-    return [];
   }
 
   Future addSubjects(List<Subject> subjects) async {
@@ -252,11 +253,11 @@ class LocalDataService {
     return list;
   }
 
-  Future<List<ExamImage>> getExamImages(int examLinkId) async {
-    List<ExamImage> examImages = [];
+  Future<List<ExamPageImage>> getExamImages(int examLinkId) async {
+    List<ExamPageImage> examImages = [];
     List<Map<String, dynamic>> maps = await db.query(
       'exam_images',
-      columns: ["id", "filePath", "imageIndex", "bytes"],
+      columns: ["id", "downloadUrl", "pageIndex", "bytes"],
       where: "examLinkId = ?",
       whereArgs: [examLinkId],
     );
@@ -264,11 +265,12 @@ class LocalDataService {
     if (maps.isNotEmpty) {
       for (var element in maps) {
         var mapWithStrings = element.cast<String, dynamic>();
-        examImages.add(ExamImage.fromJson(mapWithStrings));
+        examImages.add(ExamPageImage.fromJson(mapWithStrings));
       }
     }
 
     pp('$mm getExamImages: found on local db: ${examImages.length}');
     return examImages;
   }
+
 }

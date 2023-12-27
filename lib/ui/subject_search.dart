@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 
 import '../services/chat_service.dart';
 import '../services/local_data_service.dart';
+import '../services/you_tube_service.dart';
+import '../util/navigation_util.dart';
 import 'exam_link_list_widget.dart';
 import 'image_picker_widget.dart';
 
@@ -13,12 +15,13 @@ class SubjectSearch extends StatefulWidget {
   final Repository repository;
   final LocalDataService localDataService;
   final ChatService chatService;
+  final YouTubeService youTubeService;
 
   const SubjectSearch(
       {super.key,
       required this.repository,
       required this.localDataService,
-      required this.chatService});
+      required this.chatService, required this.youTubeService});
 
   @override
   SubjectSearchState createState() => SubjectSearchState();
@@ -38,6 +41,7 @@ class SubjectSearchState extends State<SubjectSearch> {
   void _getSubjects() async {
     try {
       List<Subject> subjects = await widget.repository.getSubjects(false);
+      subjects.sort((a,b) => a.title!.compareTo(b.title!));
       setState(() {
         _subjects = subjects;
         _filteredSubjects = subjects;
@@ -58,56 +62,19 @@ class SubjectSearchState extends State<SubjectSearch> {
   }
 
   _navigateToAI(BuildContext context) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 1000),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-             ImagePickerWidget(chatService: widget.chatService,),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var begin = const Offset(1.0, 0.0);
-          var end = Offset.zero;
-          var curve = Curves.ease;
-
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      ),
-    );
+    NavigationUtils.navigateToPage(context: context, widget:  ImagePickerWidget(
+      chatService: widget.chatService,
+    ));
   }
 
   navigateToExamLinkListWidget(BuildContext context, Subject subject) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 1000),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            ExamLinkListWidget(
-          subject: subject,
-          repository: widget.repository,
-          localDataService: widget.localDataService,
-          chatService: widget.chatService,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var begin = const Offset(1.0, 0.0);
-          var end = Offset.zero;
-          var curve = Curves.ease;
-
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      ),
-    );
+    NavigationUtils.navigateToPage(context: context, widget: ExamLinkListWidget(
+      subject: subject,
+      repository: widget.repository,
+      localDataService: widget.localDataService,
+      chatService: widget.chatService,
+      youTubeService: widget.youTubeService,
+    ));
   }
 
   @override
@@ -129,7 +96,7 @@ class SubjectSearchState extends State<SubjectSearch> {
       child: SafeArea(
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('AI Buddy'),
+            title: const Text('SgelaAI'),
             actions: [
               IconButton(
                 onPressed: () {},

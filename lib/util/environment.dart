@@ -25,4 +25,6 @@ class ChatbotEnvironment {
       return _prodGeminiUrl;
     }
   }
+
+  static int maxResults = 48;
 }

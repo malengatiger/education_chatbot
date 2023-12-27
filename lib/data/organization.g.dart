@@ -14,6 +14,9 @@ Organization _$OrganizationFromJson(Map<String, dynamic> json) => Organization(
       json['country'] == null
           ? null
           : Country.fromJson(json['country'] as Map<String, dynamic>),
+      json['city'] == null
+          ? null
+          : City.fromJson(json['city'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
@@ -23,4 +26,5 @@ Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
       'cellphone': instance.cellphone,
       'id': instance.id,
       'country': instance.country,
+      'city': instance.city,
     };

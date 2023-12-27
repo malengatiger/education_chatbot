@@ -3,13 +3,16 @@ import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_service.dart';
+import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/exam_paper_pages.dart';
+import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:flutter/material.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 
 import '../services/local_data_service.dart';
 import '../util/functions.dart';
+import '../util/navigation_util.dart';
 import 'text_prompt.dart';
 
 class ExamLinkListWidget extends StatefulWidget {
@@ -17,10 +20,11 @@ class ExamLinkListWidget extends StatefulWidget {
   final Repository repository;
   final LocalDataService localDataService;
   final ChatService chatService;
+  final YouTubeService youTubeService;
   const ExamLinkListWidget({
     super.key,
     required this.subject,
-    required this.repository, required this.localDataService, required this.chatService,
+    required this.repository, required this.localDataService, required this.chatService, required this.youTubeService,
   });
 
   @override
@@ -75,16 +79,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
   List<FocusedMenuItem> _getMenuItems(ExamLink examLink, BuildContext context) {
     List<FocusedMenuItem> list = [];
-    list.add(FocusedMenuItem(
-        title: Text('Use Text Search', style: myTextStyleSmallBlack(context)),
-        // backgroundColor: Theme.of(context).primaryColor,
-        trailingIcon: Icon(
-          Icons.search,
-          color: Theme.of(context).primaryColor,
-        ),
-        onPressed: () {
-          _navigateToExamPaperTextOnly(examLink);
-        }));
+
     list.add(FocusedMenuItem(
         title:
             Text('Use Image and Text', style: myTextStyleSmallBlack(context)),
@@ -95,6 +90,16 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
         ),
         onPressed: () {
           _navigateToExamPaperPages(examLink);
+        }));
+    list.add(FocusedMenuItem(
+        title: Text('Use Text Search', style: myTextStyleSmallBlack(context)),
+        // backgroundColor: Theme.of(context).primaryColor,
+        trailingIcon: Icon(
+          Icons.search,
+          color: Theme.of(context).primaryColor,
+        ),
+        onPressed: () {
+          _navigateToExamPaperTextOnly(examLink);
         }));
     list.add(FocusedMenuItem(
         title:
@@ -201,34 +206,26 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
   void _navigateToExamPaperTextOnly(ExamLink examLink) {
     pp('$mm _navigateToExamPaperTextOnly ...');
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TextPrompt(
-          examLink: examLink, chatService: widget.chatService,
-          repository: widget.repository, localDataService: widget.localDataService,
-        ),
-      ),
-    );
+    NavigationUtils.navigateToPage(context: context, widget: TextPrompt(
+      examLink: examLink, chatService: widget.chatService,
+      repository: widget.repository, localDataService: widget.localDataService,
+    ));
   }
 
   void _navigateToExamPaperPages(ExamLink examLink) {
     pp('$mm _navigateToExamPaperPages ...');
     examLink.subjectTitle = widget.subject.title;
     examLink.subjectId = widget.subject.id;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExamPaperPages(
-          examLink: examLink,
-          repository: widget.repository,
-          chatService: widget.chatService,
-        ),
-      ),
-    );
+    NavigationUtils.navigateToPage(context: context, widget: ExamPaperPages(
+      examLink: examLink,
+      repository: widget.repository,
+      chatService: widget.chatService,
+    ));
   }
   void _navigateToYouTube(ExamLink examLink) {
     pp('$mm _navigateToYouTube ...');
+    NavigationUtils.navigateToPage(context: context, widget: YouTubeSearcher(
+        youTubeService: widget.youTubeService, subjectId: examLink.subjectId!));
   }
 }
 

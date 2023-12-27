@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
-import 'package:edu_chatbot/data/exam_image.dart';
+import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:path/path.dart' as path;

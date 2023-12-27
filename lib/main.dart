@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/accounting_service.dart';
-import 'package:edu_chatbot/services/auth_service.dart';
 import 'package:edu_chatbot/services/agriculture_service.dart';
+import 'package:edu_chatbot/services/auth_service.dart';
 import 'package:edu_chatbot/services/chat_service.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/services/math_service.dart';
@@ -40,20 +40,24 @@ Future<void> registerServices() async {
   var dioUtil = DioUtil(dio, lds);
   GetIt.instance.registerLazySingleton<MathService>(() => MathService());
   GetIt.instance.registerLazySingleton<ChatService>(() => ChatService(dioUtil));
-  GetIt.instance.registerLazySingleton<AgricultureService>(() => AgricultureService());
+  GetIt.instance
+      .registerLazySingleton<AgricultureService>(() => AgricultureService());
   GetIt.instance.registerLazySingleton<PhysicsService>(() => PhysicsService());
-  GetIt.instance.registerLazySingleton<Repository>(() => Repository(dioUtil, lds, dio));
+  GetIt.instance
+      .registerLazySingleton<Repository>(() => Repository(dioUtil, lds, dio));
   GetIt.instance.registerLazySingleton<AuthService>(() => AuthService());
-  GetIt.instance.registerLazySingleton<AccountingService>(() => AccountingService());
+  GetIt.instance
+      .registerLazySingleton<AccountingService>(() => AccountingService());
   GetIt.instance.registerLazySingleton<LocalDataService>(() => lds);
-  GetIt.instance.registerLazySingleton<YouTubeService>(() => YouTubeService(dioUtil, lds));
-
+  GetIt.instance.registerLazySingleton<YouTubeService>(
+      () => YouTubeService(dioUtil, lds));
 
   pp('🍎 🍎 🍎 main: GetIt has registered all the services. 🍎Cool!');
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   void _dismissKeyboard(BuildContext context) {
     final currentFocus = FocusScope.of(context);
     if (!currentFocus.hasPrimaryFocus && currentFocus.hasFocus) {
@@ -65,6 +69,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var repository = GetIt.instance<Repository>();
+    var youTubeService = GetIt.instance<YouTubeService>();
     return GestureDetector(
       onTap: () {
         pp('main: ... dismiss keyboard? Tapped somewhere ...');
@@ -74,13 +79,16 @@ class MyApp extends StatelessWidget {
         title: 'SgelaAI',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple.shade800),
+          colorScheme:
+              ColorScheme.fromSeed(seedColor: Colors.deepPurple.shade800),
           useMaterial3: true,
         ),
-        home:  SubjectSearch(repository: repository,
+        home: SubjectSearch(
+          repository: repository,
           localDataService: GetIt.instance<LocalDataService>(),
-          chatService: GetIt.instance<ChatService>(),),
+          chatService: GetIt.instance<ChatService>(),
+          youTubeService: youTubeService,
+        ),
       ),
     );
   }
