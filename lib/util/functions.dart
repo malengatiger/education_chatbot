@@ -577,7 +577,7 @@ TextStyle myTextStyleMediumLargeWithSize(BuildContext context, double size) {
       fontSize: size);
 }
 
-TextStyle myTextStyleMediumLargeWithColor(
+TextStyle myTextStyle(
     BuildContext context, Color color, double size, FontWeight? fontWeight) {
   return GoogleFonts.roboto(
       textStyle: Theme.of(context).textTheme.headlineLarge,

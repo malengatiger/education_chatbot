@@ -11,6 +11,7 @@ import 'package:edu_chatbot/ui/gemini_response_viewer.dart';
 import 'package:edu_chatbot/ui/math_viewer.dart';
 import 'package:edu_chatbot/ui/pdf_viewer.dart';
 import 'package:edu_chatbot/util/busy_indicator.dart';
+import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -60,10 +61,25 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     pageSub = widget.repository.pageStream.listen((page) {
       pp('$mm pageStream : ............. downloaded page $page');
       if (mounted) {
-       _showPageToast(page);
+        _showPageToast(page);
       }
     });
   }
+
+  late Timer timer;
+
+  void _executeAfterDelay() {
+    timer = Timer(const Duration(seconds: 10), () {
+      // Code to be executed after the delay of 10 seconds
+      pp('$mm Hiding the header after 10 seconds');
+      if (mounted) {
+        setState(() {
+          isHeaderVisible = false;
+        });
+      }
+    });
+  }
+
   _showPageToast(int pageNumber) {
     showToast(
         message: 'Page $pageNumber downloaded and converted to image',
@@ -73,10 +89,12 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
         backgroundColor: Colors.black,
         textStyle: const TextStyle(fontSize: 14, color: Colors.white));
   }
+
   @override
   void dispose() {
     pageSub.cancel();
     _pageController.dispose();
+    timer.cancel();
     super.dispose();
   }
 
@@ -92,6 +110,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     try {
       images = await widget.repository.getExamImages(widget.examLink.id!);
       pp('$mm exam images found for display: ${images.length}');
+      _executeAfterDelay();
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -123,6 +142,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     });
     var image = images[index];
     // pp('$mm _handlePageChanged, imageIndex: ${image.imageIndex}');
+
     showToast(
         message: 'Page ${image.pageIndex! + 1}',
         context: context,
@@ -135,10 +155,11 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
   void _handlePageTapped(ExamPageImage examImage) {
     pp('$mm _handlePageTapped, index: ${examImage.pageIndex} ...');
 
-    String sb = _parseSelected();
-
     // pp('$mm _handlePageChanged, imageIndex: ${image.imageIndex}');
-    _displayToast(sb);
+    if (selectedImages.isNotEmpty) {
+      String sb = _parseSelected();
+      _displayToast(sb);
+    }
   }
 
   String _parseSelected() {
@@ -146,7 +167,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     sb.write('Page selected: ');
 
     for (var image in selectedImages) {
-      sb.write('${image.pageIndex! + 1}, ');
+      sb.write('${image.pageIndex! + 1} ');
     }
     pp('$mm _handlePageTapped, selectedImages: ${sb.toString()}');
     return sb.toString();
@@ -161,8 +182,6 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
         backgroundColor: Colors.black,
         textStyle: const TextStyle(fontSize: 18, color: Colors.yellow));
   }
-
-
 
   void _fillSelected(ExamPageImage examImage) {
     bool found = false;
@@ -219,41 +238,30 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
 
   _share() {}
 
-  _navigateToMathViewer(String text, List<ExamPageImage> examImages) {
-    pp('$mm _navigateToMathViewer: examImages: ${examImages.length}');
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => MathViewer(
-                text: text,
-                onShare: (images) {
-                  pp('$mm ... will share ... images: ${images.length}');
-                  selectedImages = images;
-                },
-                onRerun: (images) {
-                  pp('$mm ... will rerun ... images: ${images.length}');
-                  busySending = false;
-                  _onRerun(images);
-                },
-                selectedImages: examImages,
-                onExit: (images) {
-                  pp('$mm viewer exited and returned here ...images: ${images.length}');
-                },
-              )),
-    );
-  }
+  _navigateToMathViewer(String text) async {
+    pp('$mm _navigateToMathViewer: selectedImages: ${selectedImages.length}');
 
-  void _showFile(File file, BuildContext context) {
-    pp('$mm ... _showFile in dialog ...: ${file.path} ');
-
-    // showDialog(context: (context), builder: (_){
-    //   return AImageViewer(file: file,);
-    // });
-    showToast(
-        message: 'SgelaAI response saved',
-        textStyle: myTextStyleMediumLargeWithColor(
-            context, Colors.amberAccent, 16, FontWeight.normal),
-        context: context);
+    await NavigationUtils.navigateToPage(
+        context: context,
+        widget: MathViewer(
+          text: text,
+          onShare: (images) {
+            pp('$mm ... will share ... images: ${images.length}');
+            selectedImages = images;
+          },
+          onRerun: (images) {
+            pp('$mm ... will rerun ... images: ${images.length}');
+            busySending = false;
+            _onRerun(images);
+          },
+          selectedImages: selectedImages,
+          onExit: (images) {
+            pp('$mm viewer exited and returned here ...images: ${images.length}');
+          },
+          repository: widget.repository,
+          prompt: prompt,
+        ));
+    pp('$mm ... back from Math Viewer');
   }
 
   _onSubmit() async {
@@ -266,21 +274,23 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
       busySending = true;
     });
 
-    String mPrompt = getPrompt(widget.examLink.subjectTitle!);
+    prompt = getPrompt(widget.examLink.subjectTitle!);
     GeminiResponse? response;
     try {
       response =
-          await widget.chatService.sendImageTextPrompt(selectedImages, mPrompt);
+          await widget.chatService.sendImageTextPrompt(selectedImages, prompt);
       pp('$mm 😎 😎 😎 Gemini AI has responded! see below .... 😎 😎 😎');
       // myPrettyJsonPrint(response.toJson());
-      String text = getResponseString(response);
+      String text = _getResponseString(response);
       if (isValidLaTeXString(text)) {
-        _navigateToMathViewer(text, selectedImages);
+        await _navigateToMathViewer(text);
       } else {
-        _navigateToGeminiResponse(response);
+       await _navigateToGeminiResponse(response);
       }
       Future.delayed(const Duration(milliseconds: 1000), () {
-        selectedImages.clear();
+        setState(() {
+          selectedImages.clear();
+        });
       });
     } catch (e) {
       pp('$mm ERROR $e');
@@ -297,22 +307,23 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
   _onRerun(List<ExamPageImage> images) async {
     pp('$mm _onRerun .... : image files: ${images.length}');
 
-    if (busySending ) {
+    if (busySending) {
       return;
     }
     setState(() {
       busySending = true;
     });
 
+    // selectedImages = images;
     String mPrompt = getPrompt(widget.examLink.subjectTitle!);
     GeminiResponse? response;
     try {
       response = await widget.chatService.sendImageTextPrompt(images, mPrompt);
       pp('$mm 😎 😎 😎 Gemini AI has responded!  .... 😎 😎 😎');
       // myPrettyJsonPrint(response.toJson());
-      String text = getResponseString(response);
+      String text = _getResponseString(response);
       if (isValidLaTeXString(text)) {
-        _navigateToMathViewer(text, selectedImages);
+        _navigateToMathViewer(text);
       } else {
         _navigateToGeminiResponse(response);
       }
@@ -331,13 +342,13 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     //_onShowPagesToast();
   }
 
-  String getResponseString(GeminiResponse geminiResponse) {
+  String _getResponseString(GeminiResponse geminiResponse) {
     var sb = StringBuffer();
     geminiResponse.candidates?.forEach((candidate) {
-      for (var parts in candidate.content!.parts!) {
-        sb.write(parts.text);
-        sb.write("\n");
-      }
+      candidate.content?.parts?.forEach((parts) {
+        sb.write(parts.text ?? '');
+        sb.write('\n');
+      });
     });
     return sb.toString();
   }
@@ -384,15 +395,15 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             bd.Badge(
               badgeContent: Text(
                 '${images.length}',
-                style: myTextStyleMediumLargeWithColor(
-                    context, Colors.white, 14, FontWeight.normal),
+                style:
+                    myTextStyle(context, Colors.white, 14, FontWeight.normal),
               ),
               badgeStyle: const bd.BadgeStyle(
                 elevation: 12,
                 padding: EdgeInsets.all(12),
               ),
             ),
-            gapH16,
+            gapW16,
             IconButton(
               icon: Icon(
                   isHeaderVisible ? Icons.visibility_off : Icons.visibility),
@@ -416,9 +427,11 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             busyLoading
                 ? const Positioned(
                     bottom: 64,
-                    left: 100,
-                    right: 100,
-                    child: BusyIndicator(caption: "Loading exam paper ..."))
+                    left: 20,
+                    right: 20,
+                    child: BusyIndicator(
+                        caption:
+                            "Loading exam paper and converting to images. This may take a few minutes. Please wait for completion."))
                 : Positioned.fill(
                     child: PageView.builder(
                       controller: _pageController,
@@ -441,7 +454,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                                 setState(() {});
                               },
                               child: Padding(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(4.0),
                                 child: InteractiveViewer(
                                   child: Image.memory(
                                     bytes,
@@ -452,19 +465,17 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                                 ),
                               ),
                             ),
-                            if (_checkIfThisImageIsAlreadySelected(image))
-                              const Positioned(
-                                top: 12,
-                                right: 12,
-                                child: Icon(Icons.check_circle,
-                                    color: Colors.green, size: 36),
-                              ),
-                            busySending? const Positioned(
-                              top: 200, right: 120,
-                              child: BusyIndicator(
-                                caption: 'Waiting for SgelaAI ...',
-                              ),
-                            ): gapW8,
+                            busySending
+                                ? const Positioned(
+                                    top: 240,
+                                    right: 60,
+                                    left: 60,
+                                    child: BusyIndicator(
+                                      caption:
+                                          'Waiting for SgelaAI ... This may take a minute or two. Please wait. ',
+                                    ),
+                                  )
+                                : gapW8,
                           ],
                         );
                       },
@@ -486,13 +497,48 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
               ),
           ],
         ),
-        floatingActionButton: _getButton(),
+        floatingActionButton: Visibility(
+          visible: _shouldSendButtonBeVisible(),
+          child: FloatingActionButton.extended(
+            onPressed: () {
+              _onSubmit();
+            },
+            elevation: 16,
+            shape: const RoundedRectangleBorder(),
+            label: const SizedBox(
+                height: 160,
+                width: 200,
+                child: Row(
+                  children: [
+                    Icon(Icons.send, size: 36, color: Colors.blue),
+                    gapW16,
+                    Text('Send to SgelaAI 🍎')
+                  ],
+                )),
+          ),
+        ),
       ),
     );
   }
 
+  bool _shouldSendButtonBeVisible() {
+    if (busyLoading) {
+      return false;
+    }
+    if (busySending) {
+      return false;
+    }
+    if (selectedImages.isEmpty) {
+      return false;
+    }
+    return true;
+  }
+
   Widget _getButton() {
     if (busyLoading) {
+      return gapW8;
+    }
+    if (busySending) {
       return gapW8;
     }
     if (selectedImages.isEmpty) {
@@ -505,12 +551,13 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
       elevation: 16,
       shape: const RoundedRectangleBorder(),
       label: const SizedBox(
-          height: 100,
-          width: 100,
-          child: Column(
+          height: 160,
+          width: 200,
+          child: Row(
             children: [
               Icon(Icons.send, size: 36, color: Colors.blue),
-              Text('Send')
+              gapW16,
+              Text('Send to SgelaAI')
             ],
           )),
     );

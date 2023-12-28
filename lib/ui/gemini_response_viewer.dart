@@ -73,7 +73,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(getResponseString(),
-                                style: myTextStyleMediumLargeWithColor(
+                                style: myTextStyle(
                                     context,
                                     Theme.of(context).primaryColor,
                                     16,

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:edu_chatbot/data/gemini_response_rating.dart';
+import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/ui/rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
@@ -19,14 +21,17 @@ class MathViewer extends StatefulWidget {
       required this.onShare,
       required this.onRerun,
       required this.selectedImages,
-      required this.onExit});
+      required this.onExit,
+      required this.repository,
+      required this.prompt});
 
-  final String text;
+  final String text, prompt;
   static const mm = '💙💙💙💙 MathViewer 💙';
   final Function(List<ExamPageImage>) onShare;
   final Function(List<ExamPageImage>) onExit;
   final Function(List<ExamPageImage>) onRerun;
   final List<ExamPageImage> selectedImages;
+  final Repository repository;
 
   @override
   State<MathViewer> createState() => _MathViewerState();
@@ -46,103 +51,134 @@ class _MathViewerState extends State<MathViewer> {
 
   _clone() {
     for (var value in widget.selectedImages) {
-      var m = ExamPageImage(
-          value.examLinkId, value.id, value.downloadUrl, value.bytes, value.pageIndex,
-      value.mimeType);
+      var m = ExamPageImage(value.examLinkId, value.id, value.downloadUrl,
+          value.bytes, value.pageIndex, value.mimeType);
       list.add(m);
       pp('${MathViewer.mm} ... _cloned images: ${list.length}');
+    }
+  }
 
+  bool isRated = false;
+  int rating = 0;
+  String responseText = '';
+
+  _sendRating() async {
+    try {
+      var gr = GeminiResponseRating(rating, DateTime.now().toIso8601String(),
+          responseText, widget.prompt);
+      widget.repository.addRating(gr);
+      Navigator.of(context).pop();
+    } catch (e) {
+      pp('${MathViewer.mm} ERROR - $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     var h = MediaQuery.of(context).size.height;
-    return PopScope(
-      onPopInvoked: (isPopping) async {
-        pp('${MathViewer.mm} ... onPopInvoked,  isPopping: $isPopping');
-        widget.onExit(list);
-      },
-      child: SafeArea(
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Mathematics'), actions: [
-            PopupMenuButton(
-              onSelected: (value) async {
-                switch (value) {
-                  case '/share':
-                    pp('${MathViewer.mm} ... share required ... images: ${list.length}');
-                    widget.onShare(list);
-                    break;
-                  case '/rating':
-                    pp('${MathViewer.mm} ... rating required, will set _showRatingBar true');
-                    setState(() {
-                      _showRatingBar = true;
-                    });
-                    break;
-                  case '/rerun':
-                    pp('${MathViewer.mm} ... rerun required, images: ${list.length}');
-                    widget.onRerun(list);
-                    Navigator.pop(context); // Close the widget
-                    break;
-                }
-              },
-              itemBuilder: (BuildContext bc) {
-                return const [
-                  PopupMenuItem(
-                    value: '/rating',
-                    child: Icon(Icons.star),
-                  ),
-                  PopupMenuItem(
-                    value: '/share',
-                    child: Icon(Icons.share),
-                  ),
-                  PopupMenuItem(
-                    value: '/rerun',
-                    child: Icon(Icons.search),
-                  )
-                ];
-              },
-            )
-          ]),
-          backgroundColor: Colors.brown[100],
-          body: Stack(
-            children: [
-              Positioned.fill(
-                child: RepaintBoundary(
-                  key: _repaintBoundaryKey,
-                  child: Container(
-                    width: double.infinity,
-                    // height: h,
-                    padding: const EdgeInsets.all(4.0),
-                    child: Holder(text: getFormattedText()),
-                  ),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+            leading: IconButton(
+                icon: Icon(
+                  Platform.isAndroid ? Icons.arrow_back : Icons.arrow_back_ios,
+                ),
+                onPressed: () {
+                  // Handle the back button press
+                  if (isRated) {
+                    Navigator.pop(context);
+                  } else {
+                    showToast(
+                        message: 'Please Rate the SgelaAI response',
+                        textStyle: myTextStyle(
+                            context, Colors.amber, 16, FontWeight.normal),
+                        context: context);
+                  }
+                }),
+            title: const Text('Mathematics'),
+            actions: [
+              PopupMenuButton(
+                onSelected: (value) async {
+                  switch (value) {
+                    case '/share':
+                      pp('${MathViewer.mm} ... share required ... images: ${list.length}');
+                      widget.onShare(list);
+                      break;
+                    case '/rating':
+                      pp('${MathViewer.mm} ... rating required, will set _showRatingBar true');
+                      setState(() {
+                        _showRatingBar = true;
+                      });
+                      break;
+                    case '/rerun':
+                      pp('${MathViewer.mm} ... rerun required, images: ${list.length}');
+                      widget.onRerun(list);
+                      Navigator.pop(context); // Close the widget
+                      break;
+                  }
+                },
+                itemBuilder: (BuildContext bc) {
+                  return const [
+                    PopupMenuItem(
+                      value: '/rating',
+                      child: Icon(Icons.star),
+                    ),
+                    PopupMenuItem(
+                      value: '/share',
+                      child: Icon(Icons.share),
+                    ),
+                    PopupMenuItem(
+                      value: '/rerun',
+                      child: Icon(Icons.search),
+                    )
+                  ];
+                },
+              )
+            ]),
+        backgroundColor: Colors.brown[100],
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: RepaintBoundary(
+                key: _repaintBoundaryKey,
+                child: Container(
+                  width: double.infinity,
+                  // height: h,
+                  padding: const EdgeInsets.all(4.0),
+                  child: Holder(text: getFormattedText()),
                 ),
               ),
-              Positioned(
-                  bottom: 16,
-                  right: 48,
-                  child: GeminiRating(
-                    onRating: (rating) {
-                      pp('💙💙 Gemini rating: $rating, 💙💙 set _showRatingBar to false');
-                      showToast(
-                          message: 'Rating saved. Thank you!',
-                          textStyle: myTextStyleMediumLargeWithColor(context,
-                              Colors.greenAccent, 16, FontWeight.normal),
-                          context: context);
-                      Future.delayed(const Duration(seconds: 2), () {
-                        setState(() {
-                          _showRatingBar = false;
-                        });
-                        if (rating < 3.0) {
-                          widget.onRerun(list);
-                          Navigator.pop(context); // Close the widget
-                        }
+            ),
+            Positioned(
+                bottom: 16,
+                right: 48,
+                child: GeminiRatingWidget(
+                  onRating: (rating) {
+                    pp('💙💙 Gemini rating: $rating, 💙💙 set _showRatingBar to false');
+                    showToast(
+                        message: 'Rating saved. Thank you!',
+                        textStyle: myTextStyle(
+                            context, Colors.greenAccent, 16, FontWeight.normal),
+                        context: context);
+                    Future.delayed(const Duration(seconds: 2), () {
+                      setState(() {
+                        _showRatingBar = false;
+                        isRated = true;
                       });
-                    },
-                    visible: _showRatingBar,
-                  )),
-            ],
-          ),
+                      if (rating < 3.0) {
+                        showToast(
+                            message: 'The rating is low so will try again',
+                            textStyle: myTextStyle(
+                                context, Colors.blue, 16, FontWeight.normal),
+                            context: context);
+                        widget.onRerun(list);
+                      }
+                      Navigator.pop(context); // Close the widget
+                    });
+                  },
+                  visible: _showRatingBar,
+                )),
+          ],
         ),
       ),
     );
@@ -223,7 +259,7 @@ class Holder extends StatelessWidget {
             children: [
               Text(
                 "SgelaAI Response",
-                style: myTextStyleMediumLargeWithColor(
+                style: myTextStyle(
                   context,
                   Colors.black,
                   24,

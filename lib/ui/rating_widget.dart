@@ -3,8 +3,8 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 import '../util/functions.dart';
 
-class GeminiRating extends StatelessWidget {
-  const GeminiRating(
+class GeminiRatingWidget extends StatelessWidget {
+  const GeminiRatingWidget(
       {super.key, required this.onRating, required this.visible});
 
   final Function(double) onRating;

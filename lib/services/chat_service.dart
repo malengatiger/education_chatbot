@@ -40,9 +40,8 @@ class ChatService {
       // Add the image files to the request
       for (var i = 0; i < imageFiles.length; i++) {
         var examPageImage = imageFiles[i];
-        if (examPageImage.mimeType == null) {
-          throw Exception('mimeType is null');
-        }
+        var mimeType = "png";
+        examPageImage.mimeType ??= mimeType;
         var multipartFile = createMultipartFile(examPageImage.bytes!, "file",
             "image_${examPageImage.examLinkId}_i$i.${examPageImage.mimeType}");
         request.files.add(multipartFile);

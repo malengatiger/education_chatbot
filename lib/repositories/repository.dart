@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
@@ -61,8 +62,47 @@ class Repository {
       rethrow;
     }
   }
+
+  Future<List<GeminiResponseRating>> getRatings(int examLinkId) async {
+    pp('$mm ... getRatings ....');
+    List<GeminiResponseRating> ratings = [];
+    try {
+      String urlPrefix = ChatbotEnvironment.getSkunkUrl();
+      var path = '${urlPrefix}links/getResponseRatings';
+      List res = await dioUtil.sendGetRequest(path, {'examLinkId': examLinkId});
+      for (var r in res) {
+        ratings.add(GeminiResponseRating.fromJson(r));
+      }
+
+      pp('$mm ... getRatings .... from remote store: ${ratings.length}');
+      return ratings;
+    } catch (e) {
+      // Handle any errors
+      pp('Error calling addExamImage API: $e');
+      rethrow;
+    }
+  }
+
+  Future<GeminiResponseRating> addRating(GeminiResponseRating rating) async {
+    pp('$mm .......... addRating: ${rating.rating}');
+    String urlPrefix = ChatbotEnvironment.getSkunkUrl();
+    var path = '${urlPrefix}links/addResponseRating';
+    try {
+      var res = await dioUtil.sendPostRequest(path, rating.toJson());
+      var r = GeminiResponseRating.fromJson(res);
+      pp('$mm ... rating added to db .... rating: ${r.rating}');
+      return r;
+    } catch (e) {
+      // Handle any errors
+      pp('Error calling addResponseRating API: $e');
+      rethrow;
+    }
+  }
+
   final StreamController<int> _streamController = StreamController.broadcast();
+
   Stream<int> get pageStream => _streamController.stream;
+
   static Future<List<int>> downloadFile(String url) async {
     pp('$mm downloading file from ... $url');
     try {
