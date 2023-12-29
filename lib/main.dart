@@ -10,9 +10,11 @@ import 'package:edu_chatbot/services/physics_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/subject_search.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
+import 'package:edu_chatbot/util/environment.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:get_it/get_it.dart';
 
 import 'firebase_options.dart';
@@ -27,6 +29,8 @@ Future<void> main() async {
 
   // Register services
   await registerServices();
+  Gemini.init(apiKey: ChatbotEnvironment.getGeminiAPIKey());
+  pp('🍎 🍎 🍎 Gemini AI API has been initialized!! 🍎 🍎 🍎 Gemini apiKey: ${ChatbotEnvironment.getGeminiAPIKey()}');
 
   runApp(const MyApp());
 }

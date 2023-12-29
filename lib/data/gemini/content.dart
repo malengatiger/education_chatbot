@@ -4,13 +4,13 @@ import 'package:json_annotation/json_annotation.dart';
 part 'content.g.dart';
 
 @JsonSerializable()
-class Content {
-  List<Parts>? parts;
+class MyContent {
+  List<MyParts>? parts;
   String? role;
 
-  Content({this.parts, this.role});
+  MyContent({this.parts, this.role});
 
-  factory Content.fromJson(Map<String, dynamic> json) =>
+  factory MyContent.fromJson(Map<String, dynamic> json) =>
       _$ContentFromJson(json);
 
   Map<String, dynamic> toJson() {

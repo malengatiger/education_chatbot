@@ -39,7 +39,7 @@ final LocalDataService localDataService;
     try {
       Response response;
       // The below request is the same as above.
-      pp('$mm sendPostRequest: path: $path body: $body');
+      pp('$mm ... sendPostRequest: path: $path body: $body');
 
       response = await dio
           .post(
@@ -47,13 +47,13 @@ final LocalDataService localDataService;
             data: body,
             options: Options(responseType: ResponseType.json),
             onReceiveProgress: (count, total) {
-              pp('$mm onReceiveProgress: count: $count total: $total');
+              // pp('$mm onReceiveProgress: count: $count total: $total');
             },
             onSendProgress: (count, total) {
-              pp('$mm onSendProgress: count: $count total: $total');
+              // pp('$mm onSendProgress: count: $count total: $total');
             },
           )
-          .timeout(const Duration(seconds: 60))
+          .timeout(const Duration(seconds: 300))
           .catchError((error, stackTrace) {
             pp('$mm Error occurred during the POST request: $error');
           });

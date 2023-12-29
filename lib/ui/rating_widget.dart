@@ -15,7 +15,8 @@ class GeminiRatingWidget extends StatelessWidget {
     pp('GeminiRating ... build, visible: $visible');
     return visible
         ? Card(
-      elevation: 12,
+            elevation: 12,
+            color: Colors.blue,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: RatingBar.builder(

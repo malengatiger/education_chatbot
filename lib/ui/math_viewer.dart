@@ -62,10 +62,17 @@ class _MathViewerState extends State<MathViewer> {
   int rating = 0;
   String responseText = '';
 
-  _sendRating() async {
+  _sendRating(int mRating) async {
     try {
-      var gr = GeminiResponseRating(rating, DateTime.now().toIso8601String(),
-          responseText, widget.prompt);
+      var examPageImage = list.first;
+      var gr = GeminiResponseRating(
+          rating: mRating,
+          date: DateTime.now().toIso8601String(),
+          examPageImageId: examPageImage.id,
+          responseText: responseText,
+          prompt: widget.prompt);
+      pp('💙💙💙💙 GeminiResponseRating sent to backend!');
+      myPrettyJsonPrint(gr.toJson());
       widget.repository.addRating(gr);
       Navigator.of(context).pop();
     } catch (e) {
@@ -86,7 +93,7 @@ class _MathViewerState extends State<MathViewer> {
                 onPressed: () {
                   // Handle the back button press
                   if (isRated) {
-                    Navigator.pop(context);
+                    Navigator.of(context).pop(rating);
                   } else {
                     showToast(
                         message: 'Please Rate the SgelaAI response',
@@ -113,7 +120,7 @@ class _MathViewerState extends State<MathViewer> {
                     case '/rerun':
                       pp('${MathViewer.mm} ... rerun required, images: ${list.length}');
                       widget.onRerun(list);
-                      Navigator.pop(context); // Close the widget
+                      Navigator.of(context).pop(rating);
                       break;
                   }
                 },
@@ -160,20 +167,13 @@ class _MathViewerState extends State<MathViewer> {
                         textStyle: myTextStyle(
                             context, Colors.greenAccent, 16, FontWeight.normal),
                         context: context);
+                    this.rating = rating.round();
+                    _sendRating(rating
+                        .round()); // Convert the floating-point number to an integer
                     Future.delayed(const Duration(seconds: 2), () {
-                      setState(() {
-                        _showRatingBar = false;
-                        isRated = true;
-                      });
-                      if (rating < 3.0) {
-                        showToast(
-                            message: 'The rating is low so will try again',
-                            textStyle: myTextStyle(
-                                context, Colors.blue, 16, FontWeight.normal),
-                            context: context);
-                        widget.onRerun(list);
+                      if (mounted) {
+                        Navigator.of(context).pop(rating);
                       }
-                      Navigator.pop(context); // Close the widget
                     });
                   },
                   visible: _showRatingBar,
@@ -203,7 +203,7 @@ class _MathViewerState extends State<MathViewer> {
 
     final completer = Completer<File>();
 
-    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final renderObject =
           boundary.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (renderObject != null) {

@@ -9,16 +9,13 @@ part of 'gemini_response_rating.dart';
 GeminiResponseRating _$GeminiResponseRatingFromJson(
         Map<String, dynamic> json) =>
     GeminiResponseRating(
-      json['rating'] as int?,
-      json['date'] as String?,
-      json['responseText'] as String?,
-      json['prompt'] as String?,
-    )
-      ..id = json['id'] as int?
-      ..examPageImage = json['examPageImage'] == null
-          ? null
-          : ExamPageImage.fromJson(
-              json['examPageImage'] as Map<String, dynamic>);
+      rating: json['rating'] as int?,
+      date: json['date'] as String?,
+      id: json['id'] as int?,
+      examPageImageId: json['examPageImageId'] as int?,
+      responseText: json['responseText'] as String?,
+      prompt: json['prompt'] as String?,
+    );
 
 Map<String, dynamic> _$GeminiResponseRatingToJson(
         GeminiResponseRating instance) =>
@@ -26,7 +23,7 @@ Map<String, dynamic> _$GeminiResponseRatingToJson(
       'rating': instance.rating,
       'date': instance.date,
       'id': instance.id,
-      'examPageImage': instance.examPageImage,
+      'examPageImageId': instance.examPageImageId,
       'responseText': instance.responseText,
       'prompt': instance.prompt,
     };

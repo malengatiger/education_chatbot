@@ -34,6 +34,39 @@ pp(dynamic msg) {
   }
 }
 
+String formatMilliseconds(int milliseconds) {
+  int seconds = (milliseconds / 1000).truncate();
+  int minutes = (seconds / 60).truncate();
+  seconds %= 60;
+
+  String minutesStr = minutes.toString().padLeft(2, '0');
+  String secondsStr = seconds.toString().padLeft(2, '0');
+
+  return '$minutesStr:$secondsStr';
+}
+bool isMarkdownFormat(String text) {
+  // Markdown heading pattern: # Heading
+  final headingPattern = RegExp(r'^#\s');
+
+  // Markdown bold pattern: **Bold**
+  final boldPattern = RegExp(r'\*\*.*\*\*');
+
+  // Markdown italic pattern: *Italic*
+  final italicPattern = RegExp(r'\*.*\*');
+
+  // Markdown link pattern: [Link](https://example.com)
+  final linkPattern = RegExp(r'\[.*\]\(.*\)');
+
+  // Check if the text matches any of the Markdown patterns
+  if (headingPattern.hasMatch(text) ||
+      boldPattern.hasMatch(text) ||
+      italicPattern.hasMatch(text) ||
+      linkPattern.hasMatch(text)) {
+    return true;
+  }
+
+  return false;
+}
 void showErrorDialog(BuildContext context, String errorMessage) {
   showDialog(
     context: context,

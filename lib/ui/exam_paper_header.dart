@@ -16,7 +16,7 @@ class ExamPaperHeader extends StatelessWidget {
       fontWeight: FontWeight.w900,
     );
     return SizedBox(
-      height: 200,
+      height: 260,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Card(
@@ -34,9 +34,11 @@ class ExamPaperHeader extends StatelessWidget {
                     padding: const EdgeInsets.all(4.0),
                     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${examLink.subjectTitle}',
-                          style: titleStyle,
+                        Flexible(
+                          child: Text(
+                            '${examLink.subjectTitle}',
+                            style: titleStyle,
+                          ),
                         ),
                         IconButton(onPressed:(){
                           onClose();
@@ -52,9 +54,11 @@ class ExamPaperHeader extends StatelessWidget {
                         const SizedBox(
                           width: 8,
                         ),
-                        Text(
-                          '${examLink.title}',
-                          style: titleStyle,
+                        Flexible(
+                          child: Text(
+                            '${examLink.title}',
+                            style: titleStyle,
+                          ),
                         )
                       ],
                     ),

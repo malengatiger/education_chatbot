@@ -5,15 +5,15 @@ import 'package:json_annotation/json_annotation.dart';
 part 'candidates.g.dart';
 
 @JsonSerializable()
-class Candidates {
-  Content? content;
+class MyCandidates {
+  MyContent? content;
   String? finishReason;
   int? index;
   List<SafetyRatings>? safetyRatings;
 
-  Candidates({this.content, this.finishReason, this.index, this.safetyRatings});
+  MyCandidates({this.content, this.finishReason, this.index, this.safetyRatings});
 
-  factory Candidates.fromJson(Map<String, dynamic> json) =>
+  factory MyCandidates.fromJson(Map<String, dynamic> json) =>
       _$CandidatesFromJson(json);
 
   Map<String, dynamic> toJson() {

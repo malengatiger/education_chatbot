@@ -3,12 +3,12 @@ import 'package:json_annotation/json_annotation.dart';
 part 'parts.g.dart';
 
 @JsonSerializable()
-class Parts {
+class MyParts {
   String? text;
 
-  Parts({this.text});
+  MyParts({this.text});
 
-  factory Parts.fromJson(Map<String, dynamic> json) =>
+  factory MyParts.fromJson(Map<String, dynamic> json) =>
       _$PartsFromJson(json);
 
   Map<String, dynamic> toJson() {

@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:edu_chatbot/util/environment.dart';
+import 'package:flutter_gemini/flutter_gemini.dart' as gm;
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 
@@ -9,6 +12,7 @@ import '../data/exam_page_image.dart';
 import '../data/gemini/gemini_response.dart';
 import '../util/dio_util.dart';
 import '../util/functions.dart' as fun;
+import '../util/functions.dart';
 
 class ChatService {
   static const mm = '💜💜💜💜 ChatService';
@@ -17,7 +21,7 @@ class ChatService {
 
   ChatService(this.dioUtil);
 
-  Future<GeminiResponse> sendImageTextPrompt(
+  Future<MyGeminiResponse> sendImageTextPrompt(
       List<ExamPageImage> imageFiles, String prompt) async {
     fun.pp('$mm .... sendImageTextPrompt starting ... '
         'imageFiles: ${imageFiles.length}');
@@ -65,8 +69,8 @@ class ChatService {
         throw Exception('Failed to send AI request: jsonResponse is not a Map');
       }
 
-      GeminiResponse geminiResponse =
-          GeminiResponse.fromJson(jsonResponse['response']);
+      MyGeminiResponse geminiResponse =
+          MyGeminiResponse.fromJson(jsonResponse['response']);
       // Return the parsed JSON response
       return geminiResponse;
     } catch (e) {
@@ -90,29 +94,45 @@ class ChatService {
     return multipartFile;
   }
 
-  Future<GeminiResponse> sendTextPrompt(String prompt) async {
-    fun.pp('$mm sendTextPrompt starting ...');
+  Future<String> sendChatPrompt(String prompt) async {
+    fun.pp('$mm ...... sendChatPrompt starting ... \n$prompt');
     String urlPrefix = ChatbotEnvironment.getGeminiUrl();
     String url = '${urlPrefix}chats/sendChatPrompt';
+    StringBuffer sb = StringBuffer();
 
-    fun.pp('$mm sendTextPrompt: will send $url ...');
+    fun.pp('$mm sendChatPrompt: will send $url ...');
 
     try {
       var resp = await dioUtil.sendGetRequest(url, {'prompt': prompt});
 
-      GeminiResponse geminiResponse = GeminiResponse.fromJson(resp);
+      List? candidates = resp['candidates'];
+      if (candidates == null) {
+        return 'Unable to generate a response';
+      }
+      candidates.forEach((candidate) {
+        var content = candidate['content'];
+        List? parts = content['parts'];
+        parts?.forEach((p) {
+          sb.write(p['text']);
+          sb.write('\n');
+        });
+      });
+      // MyGeminiResponse geminiResponse = MyGeminiResponse.fromJson(resp);
 
-      fun.pp('$mm 🥬🥬🥬🥬 Gemini AI returned response ... 🥬🥬🥬🥬');
-      fun.pp(resp);
-      return geminiResponse;
+      fun.pp(
+          '$mm 🥬🥬🥬🥬 sendChatPrompt: 🍎Gemini AI returned response ... 🥬🥬🥬🥬');
+
+      pp('$mm ....... chat response string after parsing: \n${sb.toString()}\n');
+      return sb.toString();
     } catch (e) {
-      fun.pp('$mm 👿👿👿👿 Gemini AI returned error ... 👿👿👿👿');
+      fun.pp(
+          '$mm 👿👿👿👿 sendChatPrompt: Gemini AI returned error ... 👿👿👿👿');
       fun.pp(e);
       rethrow;
     }
   }
 
-  Future<GeminiResponse> sendGenericImageTextPrompt(
+  Future<MyGeminiResponse> sendGenericImageTextPrompt(
       File imageFile, String prompt) async {
     var length = await imageFile.length();
     fun.pp('$mm .... sendGenericImageTextPrompt starting ... '
@@ -152,8 +172,8 @@ class ChatService {
             '$mm 👿👿👿👿 Gemini AI returned jsonResponse is not a Map 👿👿👿👿');
         throw Exception('Failed to send AI request: jsonResponse is not a Map');
       }
-      GeminiResponse geminiResponse =
-          GeminiResponse.fromJson(jsonResponse['response']);
+      MyGeminiResponse geminiResponse =
+          MyGeminiResponse.fromJson(jsonResponse['response']);
 
       // Return the parsed JSON response
       return geminiResponse;
@@ -162,5 +182,44 @@ class ChatService {
       fun.pp(e);
       rethrow;
     }
+  }
+
+  Future<String> sendImageText(
+      ExamPageImage examPageImage, String prompt) async {
+    final gemini = gm.Gemini.instance;
+
+    var img = Uint8List.fromList(examPageImage.bytes!);
+    var res = await gemini.textAndImage(
+        text: prompt,
+
+        /// text
+        images: [img]
+
+        /// list of images
+        );
+    StringBuffer sb = StringBuffer();
+    if (res != null) {
+      sb.write(res.output);
+    }
+    return sb.toString();
+  }
+
+  Future<String> sendText() async {
+    final gemini = Gemini.instance;
+
+    var res = await gemini.chat([
+      Content(parts: [Parts(text: 'Help me learn')], role: 'user'),
+      Content(
+          parts: [Parts(text: 'What do you want to learn?')], role: 'model'),
+      Content(parts: [
+        Parts(
+            text: 'Mathematics, Science, Biology, English, Geography, Climate')
+      ], role: 'user'),
+    ]);
+    StringBuffer sb = StringBuffer();
+    if (res != null) {
+      sb.write(res.output);
+    }
+    return sb.toString();
   }
 }

@@ -4,12 +4,12 @@ import 'package:json_annotation/json_annotation.dart';
 part 'prompt_feedback.g.dart';
 
 @JsonSerializable()
-class PromptFeedback {
+class MyPromptFeedback {
   List<SafetyRatings>? safetyRatings;
 
-  PromptFeedback({this.safetyRatings});
+  MyPromptFeedback({this.safetyRatings});
 
-  factory PromptFeedback.fromJson(Map<String, dynamic> json) =>
+  factory MyPromptFeedback.fromJson(Map<String, dynamic> json) =>
       _$PromptFeedbackFromJson(json);
 
   Map<String, dynamic> toJson() {

@@ -6,10 +6,10 @@ part of 'candidates.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Candidates _$CandidatesFromJson(Map<String, dynamic> json) => Candidates(
+MyCandidates _$CandidatesFromJson(Map<String, dynamic> json) => MyCandidates(
       content: json['content'] == null
           ? null
-          : Content.fromJson(json['content'] as Map<String, dynamic>),
+          : MyContent.fromJson(json['content'] as Map<String, dynamic>),
       finishReason: json['finishReason'] as String?,
       index: json['index'] as int?,
       safetyRatings: (json['safetyRatings'] as List<dynamic>?)
@@ -17,7 +17,7 @@ Candidates _$CandidatesFromJson(Map<String, dynamic> json) => Candidates(
           .toList(),
     );
 
-Map<String, dynamic> _$CandidatesToJson(Candidates instance) =>
+Map<String, dynamic> _$CandidatesToJson(MyCandidates instance) =>
     <String, dynamic>{
       'content': instance.content,
       'finishReason': instance.finishReason,

@@ -13,7 +13,7 @@ import 'package:focused_menu/modals.dart';
 import '../services/local_data_service.dart';
 import '../util/functions.dart';
 import '../util/navigation_util.dart';
-import 'text_prompt.dart';
+import 'chat_widget.dart';
 
 class ExamLinkListWidget extends StatefulWidget {
   final Subject subject;
@@ -99,27 +99,10 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
           color: Theme.of(context).primaryColor,
         ),
         onPressed: () {
-          _navigateToExamPaperTextOnly(examLink);
+          _navigateToChat(examLink);
         }));
-    list.add(FocusedMenuItem(
-        title:
-        Text('Search YouTube', style: myTextStyleSmallBlack(context)),
-        // backgroundColor: Theme.of(context).primaryColor,
-        trailingIcon: Icon(
-          Icons.video_call,
-          color: Theme.of(context).primaryColor,
-        ),
-        onPressed: () {
-          _navigateToYouTube(examLink);
-        }));
-    list.add(FocusedMenuItem(
-        title: Text('Cancel', style: myTextStyleSmallBlack(context)),
-        // backgroundColor: Theme.of(context).primaryColor,
-        trailingIcon: Icon(
-          Icons.close,
-          color: Theme.of(context).primaryColor,
-        ),
-        onPressed: () {}));
+
+
 
     return list;
   }
@@ -137,6 +120,11 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
           '${widget.subject.title}',
           style: titleStyle,
         ),
+        actions: [
+          IconButton(onPressed: (){
+            _navigateToYouTube();
+          }, icon: const Icon(Icons.video_collection))
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -204,11 +192,11 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
     );
   }
 
-  void _navigateToExamPaperTextOnly(ExamLink examLink) {
-    pp('$mm _navigateToExamPaperTextOnly ...');
-    NavigationUtils.navigateToPage(context: context, widget: TextPrompt(
+  void _navigateToChat(ExamLink examLink) {
+    pp('$mm _navigateToChat ...');
+    NavigationUtils.navigateToPage(context: context, widget: ChatWidget(
       examLink: examLink, chatService: widget.chatService,
-      repository: widget.repository, localDataService: widget.localDataService,
+      repository: widget.repository, subject: widget.subject,
     ));
   }
 
@@ -222,10 +210,10 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       chatService: widget.chatService,
     ));
   }
-  void _navigateToYouTube(ExamLink examLink) {
-    pp('$mm _navigateToYouTube ...');
+  void _navigateToYouTube() {
+    pp('$mm _navigateToYouTube ... widget.subject.id: ${widget.subject.id}');
     NavigationUtils.navigateToPage(context: context, widget: YouTubeSearcher(
-        youTubeService: widget.youTubeService, subjectId: examLink.subjectId!));
+        youTubeService: widget.youTubeService, subjectId: widget.subject.id!, showSearchBox: true,));
   }
 }
 
@@ -267,6 +255,7 @@ class ExamLinkWidget extends StatelessWidget {
             ),
           ],
         ),
+        subtitle: Text('${examLink.documentTitle}', style: myTextStyleSmall(context),),
       ),
     );
   }

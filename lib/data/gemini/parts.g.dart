@@ -6,10 +6,10 @@ part of 'parts.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Parts _$PartsFromJson(Map<String, dynamic> json) => Parts(
+MyParts _$PartsFromJson(Map<String, dynamic> json) => MyParts(
       text: json['text'] as String?,
     );
 
-Map<String, dynamic> _$PartsToJson(Parts instance) => <String, dynamic>{
+Map<String, dynamic> _$PartsToJson(MyParts instance) => <String, dynamic>{
       'text': instance.text,
     };

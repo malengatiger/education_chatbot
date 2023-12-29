@@ -62,7 +62,8 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   image_picker: ^1.0.5
   share_plus: ^7.2.1
-
+  flutter_gemini: ^2.0.0
+  flutter_markdown: ^0.6.18+2
 
 dev_dependencies:
   flutter_test:

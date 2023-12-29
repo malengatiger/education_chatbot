@@ -6,11 +6,11 @@ import 'dart:typed_data';
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_paper_header.dart';
 import 'package:edu_chatbot/ui/gemini_response_viewer.dart';
 import 'package:edu_chatbot/ui/math_viewer.dart';
 import 'package:edu_chatbot/ui/pdf_viewer.dart';
-import 'package:edu_chatbot/util/busy_indicator.dart';
 import 'package:edu_chatbot/util/navigation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -140,26 +140,26 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     setState(() {
       currentPageIndex = index;
     });
-    var image = images[index];
+    // var image = images[index];
     // pp('$mm _handlePageChanged, imageIndex: ${image.imageIndex}');
 
-    showToast(
-        message: 'Page ${image.pageIndex! + 1}',
-        context: context,
-        duration: const Duration(milliseconds: 500),
-        toastGravity: ToastGravity.TOP_RIGHT,
-        backgroundColor: Colors.black,
-        textStyle: const TextStyle(fontSize: 18, color: Colors.white));
+    // showToast(
+    //     message: 'Page ${image.pageIndex! + 1}',
+    //     context: context,
+    //     duration: const Duration(milliseconds: 500),
+    //     toastGravity: ToastGravity.TOP_RIGHT,
+    //     backgroundColor: Colors.black,
+    //     textStyle: const TextStyle(fontSize: 18, color: Colors.white));
   }
 
   void _handlePageTapped(ExamPageImage examImage) {
     pp('$mm _handlePageTapped, index: ${examImage.pageIndex} ...');
 
     // pp('$mm _handlePageChanged, imageIndex: ${image.imageIndex}');
-    if (selectedImages.isNotEmpty) {
-      String sb = _parseSelected();
-      _displayToast(sb);
-    }
+    // if (selectedImages.isNotEmpty) {
+    //   String sb = _parseSelected();
+    //   _displayToast(sb);
+    // }
   }
 
   String _parseSelected() {
@@ -224,13 +224,17 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
 
   TextEditingController textFieldController = TextEditingController();
 
-  _navigateToGeminiResponse(GeminiResponse geminiResponse) {
+  _navigateToGeminiResponse(MyGeminiResponse geminiResponse,
+      ExamPageImage examPageImage, String prompt) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => GeminiResponseViewer(
           examLink: widget.examLink,
           geminiResponse: geminiResponse,
+          repository: widget.repository,
+          prompt: prompt,
+          examPageImage: examPageImage,
         ),
       ),
     );
@@ -275,17 +279,17 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     });
 
     prompt = getPrompt(widget.examLink.subjectTitle!);
-    GeminiResponse? response;
+    MyGeminiResponse? response;
     try {
       response =
           await widget.chatService.sendImageTextPrompt(selectedImages, prompt);
-      pp('$mm 😎 😎 😎 Gemini AI has responded! see below .... 😎 😎 😎');
+      pp('$mm 😎 😎 😎 Gemini AI has responded! .... 😎 😎 😎');
       // myPrettyJsonPrint(response.toJson());
       String text = _getResponseString(response);
       if (isValidLaTeXString(text)) {
         await _navigateToMathViewer(text);
       } else {
-       await _navigateToGeminiResponse(response);
+        await _navigateToGeminiResponse(response, selectedImages.first, prompt);
       }
       Future.delayed(const Duration(milliseconds: 1000), () {
         setState(() {
@@ -316,16 +320,16 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
 
     // selectedImages = images;
     String mPrompt = getPrompt(widget.examLink.subjectTitle!);
-    GeminiResponse? response;
+    MyGeminiResponse? response;
     try {
       response = await widget.chatService.sendImageTextPrompt(images, mPrompt);
       pp('$mm 😎 😎 😎 Gemini AI has responded!  .... 😎 😎 😎');
       // myPrettyJsonPrint(response.toJson());
       String text = _getResponseString(response);
       if (isValidLaTeXString(text)) {
-        _navigateToMathViewer(text);
+        await _navigateToMathViewer(text);
       } else {
-        _navigateToGeminiResponse(response);
+        await _navigateToGeminiResponse(response, selectedImages.first, prompt);
       }
       Future.delayed(const Duration(milliseconds: 1000), () {
         selectedImages.clear();
@@ -342,7 +346,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     //_onShowPagesToast();
   }
 
-  String _getResponseString(GeminiResponse geminiResponse) {
+  String _getResponseString(MyGeminiResponse geminiResponse) {
     var sb = StringBuffer();
     geminiResponse.candidates?.forEach((candidate) {
       candidate.content?.parts?.forEach((parts) {
@@ -379,9 +383,10 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
       case 'MATHEMATICS':
         return "Solve the problem in the image. Explain each step in detail. "
             "Use well structured Latex(Math) format in your response. "
-            "Use paragraphs and/or sections to optimize readability";
+            "Use paragraphs and/or sections to optimize and enhance readability";
       default:
-        return "Help me with this. Explain each step";
+        return "Help me with this. Explain each step in detail. "
+            "Use paragraphs and/or sections to optimize and enhance readability";
     }
   }
 
@@ -481,6 +486,15 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                       },
                     ),
                   ),
+            Positioned(
+                bottom: 12,
+                left: 12,
+                child: Text(
+                  '${currentPageIndex + 1}',
+                  style:
+                      myTextStyle(context, Colors.blue, 36,
+                          FontWeight.w900),
+                )),
             if (isHeaderVisible) // Conditionally show the ExamPaperHeader
               Positioned(
                 top: 0,
@@ -532,34 +546,5 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
       return false;
     }
     return true;
-  }
-
-  Widget _getButton() {
-    if (busyLoading) {
-      return gapW8;
-    }
-    if (busySending) {
-      return gapW8;
-    }
-    if (selectedImages.isEmpty) {
-      return gapW8;
-    }
-    return FloatingActionButton.extended(
-      onPressed: () {
-        _onSubmit();
-      },
-      elevation: 16,
-      shape: const RoundedRectangleBorder(),
-      label: const SizedBox(
-          height: 160,
-          width: 200,
-          child: Row(
-            children: [
-              Icon(Icons.send, size: 36, color: Colors.blue),
-              gapW16,
-              Text('Send to SgelaAI')
-            ],
-          )),
-    );
   }
 }

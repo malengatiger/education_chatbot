@@ -9,13 +9,13 @@ import 'candidates.dart';
 part 'gemini_response.g.dart';
 
 @JsonSerializable()
-class GeminiResponse {
-  List<Candidates>? candidates;
-  PromptFeedback? promptFeedback;
+class MyGeminiResponse {
+  List<MyCandidates>? candidates;
+  MyPromptFeedback? promptFeedback;
 
-  GeminiResponse({this.candidates, this.promptFeedback});
+  MyGeminiResponse({this.candidates, this.promptFeedback});
 
-  factory GeminiResponse.fromJson(Map<String, dynamic> json) =>
+  factory MyGeminiResponse.fromJson(Map<String, dynamic> json) =>
       _$GeminiResponseFromJson(json);
 
   Map<String, dynamic> toJson() {

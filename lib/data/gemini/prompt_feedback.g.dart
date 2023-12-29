@@ -6,14 +6,14 @@ part of 'prompt_feedback.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-PromptFeedback _$PromptFeedbackFromJson(Map<String, dynamic> json) =>
-    PromptFeedback(
+MyPromptFeedback _$PromptFeedbackFromJson(Map<String, dynamic> json) =>
+    MyPromptFeedback(
       safetyRatings: (json['safetyRatings'] as List<dynamic>?)
           ?.map((e) => SafetyRatings.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
-Map<String, dynamic> _$PromptFeedbackToJson(PromptFeedback instance) =>
+Map<String, dynamic> _$PromptFeedbackToJson(MyPromptFeedback instance) =>
     <String, dynamic>{
       'safetyRatings': instance.safetyRatings,
     };
