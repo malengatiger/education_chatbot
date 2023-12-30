@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_analog_clock/flutter_analog_clock.dart';
 
 import '../util/functions.dart';
 
@@ -9,12 +10,14 @@ class BusyIndicator extends StatefulWidget {
   final Color? color;
   final double? elevation;
   final bool? showElapsedTime;
+  final bool? showClock;
 
   const BusyIndicator(
       {super.key,
       this.caption,
       this.color = Colors.blue,
       this.elevation = 8.0,
+      this.showClock = true,
       this.showElapsedTime = true});
 
   @override
@@ -57,11 +60,17 @@ class _BusyIndicatorState extends State<BusyIndicator> {
 
   @override
   Widget build(BuildContext context) {
+    var height = 160.0;
+    if (widget.showClock != null) {
+      if (widget.showClock!) {
+        height = 300.0;
+      }
+    }
     return Card(
       elevation: widget.elevation,
       child: Center(
         child: SizedBox(
-          height: 160,
+          height: height,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -90,6 +99,14 @@ class _BusyIndicatorState extends State<BusyIndicator> {
                         style: myTextStyle(
                             context, Colors.pink, 18, FontWeight.bold)),
                   ],
+                ),
+                AnalogClock(
+                  dateTime: DateTime.now(),
+                  isKeepTime: false,
+                  child: const Align(
+                    alignment: FractionalOffset(0.5, 0.75),
+                    child: Text('GMT+2'), //todo - use country db to set this
+                  ),
                 ),
               ],
             ),

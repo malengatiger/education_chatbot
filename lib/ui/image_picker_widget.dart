@@ -42,9 +42,9 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
       var compressedImage = await compressImage(file: savedImage, quality: 80);
       _images.clear();
       setState(() {
-        _images.add(compressedImage);
+        _images.add(compressedImage!);
       });
-      pp('$mm ... image picked, compressedImage: ${compressedImage.path}');
+      pp('$mm ... image picked, compressedImage: ${compressedImage?.path}');
       _sendImageToAI();
     }
   }

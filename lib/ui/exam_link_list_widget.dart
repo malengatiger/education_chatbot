@@ -5,6 +5,7 @@ import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_service.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/exam_paper_pages.dart';
+import 'package:edu_chatbot/ui/text_chat.dart';
 import 'package:edu_chatbot/ui/you_tube_searcher.dart';
 import 'package:flutter/material.dart';
 import 'package:focused_menu/focused_menu.dart';
@@ -194,7 +195,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
 
   void _navigateToChat(ExamLink examLink) {
     pp('$mm _navigateToChat ...');
-    NavigationUtils.navigateToPage(context: context, widget: ChatWidget(
+    NavigationUtils.navigateToPage(context: context, widget: TextChat(
       examLink: examLink, chatService: widget.chatService,
       repository: widget.repository, subject: widget.subject,
     ));

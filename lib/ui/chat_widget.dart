@@ -1,4 +1,3 @@
-import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
@@ -49,13 +48,6 @@ class ChatWidgetState extends State<ChatWidget> {
   bool isMarkDown = false;
 
   Future<String> _sendChatPrompt() async {
-    // if (textEditingController.value.text.isEmpty) {
-    //   showToast(
-    //       message: 'Please enter search text',
-    //       textStyle: myTextStyle(context, Colors.white, 16, FontWeight.normal),
-    //       context: context);
-    //   return '';
-    // }
     String prompt = textEditingController.value.text;
     var promptContext = _getPromptContext();
     if (chatCount == 0) {
@@ -105,92 +97,135 @@ class ChatWidgetState extends State<ChatWidget> {
     return sb.toString();
   }
 
+  _showSearchDialog() {
+
+  }
+
+  bool _showsearchInput = false;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
           title: const Text('SgelaAI Chat'),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  _showsearchInput = true;
+                  _showSearchDialog();
+                },
+                icon: const Icon(Icons.search)),
+          ],
         ),
         backgroundColor: Colors.brown[100],
         body: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  isMarkDown
-                      ? MarkdownWidget(text: responseText)
-                      :Text(
-                    '${widget.subject.title}',
-                    style:
-                        myTextStyle(context, Colors.black, 18, FontWeight.w900),
-                  ),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Card(
-                          elevation: 8.0,
-                          child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: SingleChildScrollView(
-                                child: Text(
-                                  responseText,
-                                  maxLines: null,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ))),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                         TextField(
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  labelText: 'Search Text Here',
-                                ),
-                                controller: textEditingController,
-                                onTap: _handleTextFieldTap,
-                              ),
-                        gapH16,
-                        ElevatedButton.icon(
-                          style: const ButtonStyle(
-                            elevation: MaterialStatePropertyAll(8.0),
+            Positioned(
+              top: 2, left: 8, right: 8,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Card(
+                  elevation: 16.0,
+                   child: Padding(
+                     padding: const EdgeInsets.all(8.0),
+                     child: Column(
+                                       mainAxisAlignment: MainAxisAlignment.center,
+                                       crossAxisAlignment: CrossAxisAlignment.center,
+                                       children: [
+                      SizedBox(width:400,
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Search Text Here',
                           ),
-                          onPressed: () {
-                            _sendChatPrompt();
-                          },
-                          icon: const Icon(
-                            Icons.send,
-                          ),
-                          label: const Text('Send to SgelaAI'),
-                        )
-                      ],
-                    ),
-                  ),
-                ],
+                          controller: textEditingController,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        style: const ButtonStyle(
+                          elevation: MaterialStatePropertyAll(8.0),
+                        ),
+                        onPressed: () {
+                          _sendChatPrompt();
+                        },
+                        icon: const Icon(
+                          Icons.send,
+                        ),
+                        label: const Text('Send to SgelaAI'),
+                      ),
+                                       ],
+                                     ),
+                   ),
+                ),
+              )
+            ),
+            Positioned(
+              top: 148,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: isMarkDown
+                    ? Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: MarkdownWidget(text: responseText),
+                    )
+                    : Text(
+                        '${widget.subject.title}',
+                        style: myTextStyle(
+                            context, Colors.black, 18, FontWeight.w900),
+                      ),
               ),
             ),
-            busy
-                ? const Positioned(
-                    top: 240,
-                    left: 48,
-                    right: 48,
-                    child: BusyIndicator(
-                      caption:
-                          'Talking to SgelaAI ... may take a minute or two. Please wait.',
-                    ))
-                : gapW8,
-            Positioned(
-                bottom: 16,
-                left: 48,
-                child: Text('${promptHistory.length}',
-                    style:
-                        myTextStyle(context, Colors.grey, 28, FontWeight.w900)))
+            // Positioned(
+            //   bottom: 24, left:20,right:20,
+            //   child:  SearchInput(textEditingController: textEditingController, onSendTapped: (){
+            //   _sendChatPrompt();
+            // }),),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class SearchInput extends StatelessWidget {
+  final TextEditingController textEditingController;
+  final Function onSendTapped;
+
+  const SearchInput(
+      {super.key,
+      required this.textEditingController,
+      required this.onSendTapped});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(height:140,
+      child: Column(mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(width: 140,
+            child: TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Search Text Here',
+              ),
+              controller: textEditingController,
+            ),
+          ),
+          gapH16,
+          ElevatedButton.icon(
+            style: const ButtonStyle(
+              elevation: MaterialStatePropertyAll(8.0),
+            ),
+            onPressed: () {
+              onSendTapped();
+            },
+            icon: const Icon(
+              Icons.send,
+            ),
+            label: const Text('Send to SgelaAI'),
+          ),
+        ],
       ),
     );
   }
@@ -206,7 +241,7 @@ class MarkdownWidget extends StatelessWidget {
     return Card(
       elevation: 8,
       child: SizedBox(
-        height: 500,
+        height: 500, width:400,
         child: Markdown(
           data: text,
           selectable: true,

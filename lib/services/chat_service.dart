@@ -136,14 +136,27 @@ class ChatService {
       File imageFile, String prompt) async {
     var length = await imageFile.length();
     fun.pp('$mm .... sendGenericImageTextPrompt starting ... '
-        'imageFile: $length bytes');
-    var compressed = await compressImage(file: imageFile,
-        quality: 80);
+        'imageFile: ${(length/1024/1024).toStringAsFixed(2)} MB');
+    var compressed = await compressImage(file: imageFile, quality: 80);
+    if (compressed == null) {
+      throw Exception('File is fucked!');
+    }
     var compLength = await compressed.length();
 
     if (compLength > (1024 * 1024 * 3)) {
-      throw Exception('Image file too big: ${compLength/1024/1024}MB');
+      compressed = await compressImage(file: imageFile, quality: 64);
+      if (compressed == null) {
+        throw Exception('File is fucked too!');
+      }
+      var compLength2 = await compressed.length();
+      if (compLength2 > (1024 * 1024 * 3)) {
+        throw Exception('Image file too big: ${(compLength2 / 1024 / 1024).toStringAsFixed(2)} MB');
+      }
     }
+    var compLength2 = await compressed.length();
+
+    fun.pp('$mm .... sendGenericImageTextPrompt starting ... '
+        'compressed imageFile: ${(compLength2/1024/1024).toStringAsFixed(2)} MB');
     String urlPrefix = ChatbotEnvironment.getGeminiUrl();
     String url = '${urlPrefix}textImage/sendTextImagePrompt';
     fun.pp('$mm sendImageTextPrompt: will send : $url ...');
@@ -154,7 +167,7 @@ class ChatService {
       request.fields['prompt'] = prompt;
 
       // Add the image files to the request
-      var stream = http.ByteStream(imageFile.openRead());
+      var stream = http.ByteStream(compressed.openRead());
       // var multipartFile0 = http.MultipartFile("file", stream, length);
       List<int> bytes = await stream.toBytes();
       var multipartFile = createMultipartFile(bytes, 'file', 'myfile.jpg');
