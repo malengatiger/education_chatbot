@@ -117,9 +117,11 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
         showErrorDialog(context, 'Failed to load examination images');
       }
     }
-    setState(() {
-      busyLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+            busyLoading = false;
+          });
+    }
   }
 
   bool _checkIfThisImageIsAlreadySelected(ExamPageImage image) {
@@ -268,6 +270,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     pp('$mm ... back from Math Viewer');
   }
 
+  String responseText = '';
   _onSubmit() async {
     pp('$mm submitting the whole thing to Gemini AI : image files: ${selectedImages.length}');
 
@@ -285,9 +288,9 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
           await widget.chatService.sendImageTextPrompt(selectedImages, prompt);
       pp('$mm 😎 😎 😎 Gemini AI has responded! .... 😎 😎 😎');
       // myPrettyJsonPrint(response.toJson());
-      String text = _getResponseString(response);
-      if (isValidLaTeXString(text)) {
-        await _navigateToMathViewer(text);
+      responseText = _getResponseString(response);
+      if (isValidLaTeXString(responseText)) {
+        await _navigateToMathViewer(responseText);
       } else {
         await _navigateToGeminiResponse(response, selectedImages.first, prompt);
       }
@@ -325,9 +328,9 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
       response = await widget.chatService.sendImageTextPrompt(images, mPrompt);
       pp('$mm 😎 😎 😎 Gemini AI has responded!  .... 😎 😎 😎');
       // myPrettyJsonPrint(response.toJson());
-      String text = _getResponseString(response);
-      if (isValidLaTeXString(text)) {
-        await _navigateToMathViewer(text);
+      responseText = _getResponseString(response);
+      if (isValidLaTeXString(responseText)) {
+        await _navigateToMathViewer(responseText);
       } else {
         await _navigateToGeminiResponse(response, selectedImages.first, prompt);
       }
@@ -357,26 +360,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     return sb.toString();
   }
 
-  bool isValidLaTeXString(String text) {
-    // Define a list of special characters or phrases to check for
-    List<String> specialCharacters = [
-      '\\(',
-      '\\)',
-      '\\[',
-      '\\]',
-      '\\frac',
-      '\\cdot'
-    ];
 
-    // Check if the text contains any of the special characters or phrases
-    for (String character in specialCharacters) {
-      if (text.contains(character)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
 
   String getPrompt(String subject) {
     switch (subject) {
@@ -385,8 +369,11 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             "Use well structured Latex(Math) format in your response. "
             "Use paragraphs and/or sections to optimize and enhance readability";
       default:
-        return "Help me with this. Explain each step in detail. "
-            "Use paragraphs and/or sections to optimize and enhance readability";
+        return "Help me with this. Explain each step of the solution in detail. "
+            "Use examples where appropriate. "
+            "Responses must be at the high school and college freshman level"
+            "Response text must be in markdown format. "
+            "Use paragraphs and/or sections to optimize and enhance readability\n";
     }
   }
 

@@ -109,14 +109,14 @@ class ChatService {
       if (candidates == null) {
         return 'Unable to generate a response';
       }
-      candidates.forEach((candidate) {
+      for (var candidate in candidates) {
         var content = candidate['content'];
         List? parts = content['parts'];
         parts?.forEach((p) {
           sb.write(p['text']);
           sb.write('\n');
         });
-      });
+      }
       // MyGeminiResponse geminiResponse = MyGeminiResponse.fromJson(resp);
 
       fun.pp(
@@ -132,7 +132,7 @@ class ChatService {
     }
   }
 
-  Future<MyGeminiResponse> sendGenericImageTextPrompt(
+  Future<String> sendGenericImageTextPrompt(
       File imageFile, String prompt) async {
     var length = await imageFile.length();
     fun.pp('$mm .... sendGenericImageTextPrompt starting ... '
@@ -142,8 +142,7 @@ class ChatService {
     }
     String urlPrefix = ChatbotEnvironment.getGeminiUrl();
     String url = '${urlPrefix}textImage/sendTextImagePrompt';
-    String param = 'file';
-    fun.pp('$mm sendImageTextPrompt: will send ,,,,, $url ...');
+    fun.pp('$mm sendImageTextPrompt: will send : $url ...');
 
     try {
       http.MultipartRequest request =
@@ -152,7 +151,12 @@ class ChatService {
 
       // Add the image files to the request
       var stream = http.ByteStream(imageFile.openRead());
-      var multipartFile = http.MultipartFile("file", stream, length);
+      // var multipartFile0 = http.MultipartFile("file", stream, length);
+      List<int> bytes = await stream.toBytes();
+      var multipartFile = createMultipartFile(bytes, 'file', 'myfile.jpg');
+      fun.pp('$mm sendImageTextPrompt: will send multipartFile :'
+          ' ${multipartFile.length} bytes ...');
+
       request.files.add(multipartFile);
       // Send the request and get the response
       StreamedResponse response = await request.send();
@@ -176,7 +180,7 @@ class ChatService {
           MyGeminiResponse.fromJson(jsonResponse['response']);
 
       // Return the parsed JSON response
-      return geminiResponse;
+      return getResponseString(geminiResponse);
     } catch (e) {
       fun.pp('$mm 👿👿👿👿 Gemini AI returned error ... 👿👿👿👿');
       fun.pp(e);

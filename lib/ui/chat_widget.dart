@@ -49,16 +49,19 @@ class ChatWidgetState extends State<ChatWidget> {
   bool isMarkDown = false;
 
   Future<String> _sendChatPrompt() async {
-    if (textEditingController.value.text.isEmpty) {
-      showToast(
-          message: 'Please enter search text',
-          textStyle: myTextStyle(context, Colors.white, 16, FontWeight.normal),
-          context: context);
-      return '';
-    }
+    // if (textEditingController.value.text.isEmpty) {
+    //   showToast(
+    //       message: 'Please enter search text',
+    //       textStyle: myTextStyle(context, Colors.white, 16, FontWeight.normal),
+    //       context: context);
+    //   return '';
+    // }
     String prompt = textEditingController.value.text;
+    var promptContext = _getPromptContext();
     if (chatCount == 0) {
-      prompt = '${widget.subject.title} is the subject. $prompt';
+      prompt = '$promptContext \nSubject: ${widget.subject.title}. $prompt';
+    } else {
+      prompt = '$promptContext $prompt';
     }
     pp('$mm .............. sending chat prompt: \n$prompt\n');
     StringBuffer sb = StringBuffer();
@@ -73,7 +76,6 @@ class ChatWidgetState extends State<ChatWidget> {
       if (isMarkdownFormat(responseText)) {
         isMarkDown = true;
         pp('$mm ....... isMarkdownFormat: 🍎$isMarkdownFormat 🍎');
-
       } else {
         isMarkDown = false;
       }
@@ -92,6 +94,17 @@ class ChatWidgetState extends State<ChatWidget> {
     return sb.toString();
   }
 
+  String _getPromptContext() {
+    StringBuffer sb = StringBuffer();
+    sb.write(
+        'My name is SgelaAI and I am a super tutor who knows everything. I am here to help you study for all your high school courses and subjects\n');
+    sb.write('I answer questions that relates to the subject provided. \n');
+    sb.write('I keep my answers to the high school or college freshman level');
+    sb.write(
+        'I return all my responses in markdown format. I use headings and paragraphs to enhance readability');
+    return sb.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -106,7 +119,9 @@ class ChatWidgetState extends State<ChatWidget> {
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
-                  Text(
+                  isMarkDown
+                      ? MarkdownWidget(text: responseText)
+                      :Text(
                     '${widget.subject.title}',
                     style:
                         myTextStyle(context, Colors.black, 18, FontWeight.w900),
@@ -131,9 +146,7 @@ class ChatWidgetState extends State<ChatWidget> {
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
-                        isMarkDown
-                            ? MarkdownWidget(text: responseText)
-                            : TextField(
+                         TextField(
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
                                   labelText: 'Search Text Here',

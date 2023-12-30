@@ -2,8 +2,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,14 +12,18 @@ import 'package:flutter_sim_country_code/flutter_sim_country_code.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:image/image.dart' as img;
 import 'package:intl/date_symbol_data_file.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:intl_phone_field/countries.dart' as cc;
 import 'package:path_provider/path_provider.dart';
 import 'package:pretty_json/pretty_json.dart';
 import 'package:video_thumbnail/video_thumbnail.dart' as vt;
-import 'package:intl_phone_field/countries.dart' as cc;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+
+import '../data/gemini/gemini_response.dart';
 import 'emojis.dart';
-import 'package:image/image.dart' as img;
+
 pp(dynamic msg) {
   var time = getFormattedDateHour(DateTime.now().toIso8601String());
   if (kReleaseMode) {
@@ -33,6 +37,62 @@ pp(dynamic msg) {
     }
   }
 }
+bool isValidLaTeXString(String text) {
+  // Define a list of special characters or phrases to check for
+  List<String> specialCharacters = [
+    '\\(',
+    '\\)',
+    '\\[',
+    '\\]',
+    '\\frac',
+    '\\cdot'
+  ];
+
+  // Check if the text contains any of the special characters or phrases
+  for (String character in specialCharacters) {
+    if (text.contains(character)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+Future<File> compressImage({required File file, required int quality}) async {
+  final tempDir = await getTemporaryDirectory();
+  final tempPath = tempDir.path;
+  final fileName = file.path.split('/').last;
+  final compressedFile = File('$tempPath/$fileName');
+  pp('compressing file, size: ${await file.length()} bytes');
+  final fileSize = await file.length();
+  if (fileSize > 2 * 1024 * 1024) {
+    final result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      compressedFile.absolute.path,
+      quality: quality,
+    );
+    var mFile = File(result!.path);
+    var size = await mFile.length();
+    pp('compressed file, size: $size bytes');
+    if (size > 4 * 1024 * 1024) {
+      pp('compressed file still too big, bigger than 4MB: ${await mFile.length()} bytes');
+      return compressImage(file: mFile, quality: quality);
+    }
+    return mFile;
+  } else {
+    pp('file NOT compressed, no need to, size: ${await file.length()} bytes');
+    return file;
+  }
+}
+String getResponseString(MyGeminiResponse geminiResponse) {
+  var sb = StringBuffer();
+  geminiResponse.candidates?.forEach((candidate) {
+    candidate.content?.parts?.forEach((parts) {
+      sb.write(parts.text ?? '');
+      sb.write('\n');
+    });
+  });
+  return sb.toString();
+}
 
 String formatMilliseconds(int milliseconds) {
   int seconds = (milliseconds / 1000).truncate();
@@ -44,6 +104,7 @@ String formatMilliseconds(int milliseconds) {
 
   return '$minutesStr:$secondsStr';
 }
+
 bool isMarkdownFormat(String text) {
   // Markdown heading pattern: # Heading
   final headingPattern = RegExp(r'^#\s');
@@ -67,6 +128,7 @@ bool isMarkdownFormat(String text) {
 
   return false;
 }
+
 void showErrorDialog(BuildContext context, String errorMessage) {
   showDialog(
     context: context,
@@ -86,6 +148,7 @@ void showErrorDialog(BuildContext context, String errorMessage) {
     },
   );
 }
+
 Future<String> getFmtDate(String date, String locale) async {
   await initializeDateFormatting("en", "somefile");
   String mLocale = getValidLocale(locale);
@@ -614,7 +677,7 @@ TextStyle myTextStyle(
     BuildContext context, Color color, double size, FontWeight? fontWeight) {
   return GoogleFonts.roboto(
       textStyle: Theme.of(context).textTheme.headlineLarge,
-      fontWeight: fontWeight?? FontWeight.w900,
+      fontWeight: fontWeight ?? FontWeight.w900,
       color: color,
       fontSize: size);
 }
@@ -757,10 +820,12 @@ void prettyJson(String input) {
   var prettyString = encoder.convert(object);
   prettyString.split('\n').forEach((element) => myPrint(element));
 }
-String getPhoneFormat(String phoneNumber) {
-  return phoneNumber.replaceAllMapped(RegExp(r'(\d{3})(\d{3})(\d+)'), (Match m) => "(${m[1]}) ${m[2]}-${m[3]}");
 
+String getPhoneFormat(String phoneNumber) {
+  return phoneNumber.replaceAllMapped(
+      RegExp(r'(\d{3})(\d{3})(\d+)'), (Match m) => "(${m[1]}) ${m[2]}-${m[3]}");
 }
+
 Future<cc.Country?> getDeviceCountry(String countryCode) async {
   String? code;
   cc.Country? country;
@@ -771,14 +836,15 @@ Future<cc.Country?> getDeviceCountry(String countryCode) async {
     pp('....................... _countryCode: $code');
     for (var value in cc.countries) {
       if (value.code == code) {
-          country = value;
+        country = value;
       }
     }
   } on PlatformException {
     return null;
   }
- return country;
+  return country;
 }
+
 Future<String?> getDeviceCountryCode() async {
   String? code;
   try {
@@ -825,10 +891,10 @@ showSnackBar(
 
 showErrorSnackBar(
     {required String message,
-      required BuildContext context,
-      Duration? duration,
-      double? padding,
-      double? elevation}) {
+    required BuildContext context,
+    Duration? duration,
+    double? padding,
+    double? elevation}) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     duration: duration ?? const Duration(seconds: 5),
     backgroundColor: Colors.red,
@@ -1162,14 +1228,15 @@ showToast(
     pp('$mm 👿👿👿👿👿 we have a small TOAST problem, Boss! - 👿 $e');
   }
 }
+
 showOKToast(
     {required String message,
-      required BuildContext context,
-      Color? backgroundColor,
-      TextStyle? textStyle,
-      Duration? duration,
-      double? padding,
-      ToastGravity? toastGravity}) {
+    required BuildContext context,
+    Color? backgroundColor,
+    TextStyle? textStyle,
+    Duration? duration,
+    double? padding,
+    ToastGravity? toastGravity}) {
   FToast fToast = FToast();
   const mm = 'FunctionsAndShit: 💀 💀 💀 💀 💀 : ';
   try {
@@ -1210,6 +1277,7 @@ showOKToast(
     pp('$mm 👿👿👿👿👿 we have a small TOAST problem, Boss! - 👿 $e');
   }
 }
+
 Future<String> getStringFromAssets(String path) async {
   final mPath = 'assets/l10n/$path.json';
 

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:edu_chatbot/ui/busy_indicator.dart';
+import 'package:edu_chatbot/ui/generic_image_response_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -19,6 +21,15 @@ class ImagePickerWidget extends StatefulWidget {
 class ImagePickerWidgetState extends State<ImagePickerWidget> {
   final List<File> _images = [];
   static const mm = '🥦🥦🥦🥦 ImagePickerWidget 🍐';
+  bool busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _pickImage(ImageSource.gallery);
+    });
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await ImagePicker().pickImage(source: source);
@@ -27,39 +38,79 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
       final appDir = await getApplicationDocumentsDirectory();
       final savedImage =
           await image.copy('${appDir.path}/${image.path.split('/').last}');
+      var compressedImage = await compressImage(file: savedImage, quality: 80);
+      _images.clear();
       setState(() {
-        _images.add(savedImage);
+        _images.add(compressedImage);
       });
-      pp('$mm ... image picked, savedImage: ${savedImage.path}');
+      pp('$mm ... image picked, compressedImage: ${compressedImage.path}');
+      _sendImageToAI();
     }
   }
 
   Future _sendImageToAI() async {
     pp('$mm _sendImageToAI: ...........................'
         ' images: ${_images.length}');
-
+    if (_images.isEmpty) {
+      return;
+    }
+    pp('$mm _sendImageToAI: image: ${_images.first.path} - ${await _images.first.length()} bytes');
+    setState(() {
+      busy = true;
+    });
     try {
-      var rr = await widget.chatService
-          .sendGenericImageTextPrompt(_images.first, 'Tell me what you see');
+      var responseText = await widget.chatService.sendGenericImageTextPrompt(
+          _images.first,
+          '${_getPromptContext()}. \n'
+          '${textEditingController.value.text}');
       pp('$mm _sendImageToAI: ...... Gemini AI has responded! ');
-
-      pp('$mm ... ${rr.toJson()}');
+      _navigateToGenericImageResponse(_images.first, responseText);
+      pp('$mm ... response: $responseText');
     } catch (e) {
       pp('$mm ERROR $e');
       if (mounted) {
         showErrorDialog(context, 'Fell down, Boss! 🍎 $e');
       }
     }
+    setState(() {
+      busy = false;
+    });
   }
 
-  bool _useCamera = true;
+  _navigateToGenericImageResponse(File file, String text) {
+    var isLatex = isValidLaTeXString(text);
+    pp('$mm ... _navigateToGenericImageResponse, '
+        'isValidLaTeXString: $isLatex');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GenericImageResponseViewer(
+            text: text, isLaTex: isLatex, file: file),
+      ),
+    );
+  }
+
+  String _getPromptContext() {
+    var sb = StringBuffer();
+    sb.write('Tell me, in detail, what you see in the image. \n');
+    sb.write(
+        'If it is mathematics or physics, solve the problem and return response in LaTex format. \n');
+    sb.write(
+        'If it is any other subject return response in markdown format. \n');
+    sb.write('Focus on educational aspects of the image contents. \n');
+    sb.write('Use headings and paragraphs in markdown formatted response');
+    return sb.toString();
+  }
+
+  bool _useCamera = false;
   final List<String> _captions = [];
+  TextEditingController textEditingController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Image AI Buddy'),
+        title: const Text('SgelaAI Images'),
         bottom: PreferredSize(
             preferredSize: const Size.fromHeight(36),
             child: Column(
@@ -77,6 +128,7 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                         setState(() {
                           _useCamera = value;
                         });
+                        _pickImage(value? ImageSource.camera: ImageSource.gallery);
                       },
                     ),
                   ],
@@ -104,12 +156,15 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                           _captions[index] = value;
                         });
                       },
+                      controller: textEditingController,
                     ),
                   ),
                   Expanded(
                     child: Image.file(
                       _images[index],
                       fit: BoxFit.cover,
+                      height: double.infinity,
+                      width: double.infinity,
                     ),
                   ),
                 ],
@@ -117,21 +172,32 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
             },
           ),
           Positioned(
-              bottom: 8,
-              child: Center(
-                child: ToolBar(
-                  onCamera: () {
-                    _pickImage(
-                        _useCamera ? ImageSource.camera : ImageSource.gallery);
-                  },
-                  onSubmit: () {
-                    if (_images.isNotEmpty) {
-                      _sendImageToAI();
-                    }
-                  },
-                  showSubmit: _images.isNotEmpty,
-                ),
-              )),
+            bottom: 8,
+            child: Center(
+              child: ToolBar(
+                onCamera: () {
+                  _pickImage(
+                      _useCamera ? ImageSource.camera : ImageSource.gallery);
+                },
+                onSubmit: () {
+                  if (_images.isNotEmpty) {
+                    _sendImageToAI();
+                  }
+                },
+                showSubmit: _images.isNotEmpty,
+              ),
+            ),
+          ),
+          busy
+              ? const Positioned(
+                  top: 200,
+                  left: 20,
+                  right: 20,
+                  child: BusyIndicator(
+                    caption:
+                        'SgelaAI is checking the picture out. Please wait.',
+                  ))
+              : gapW8,
         ],
       ),
     );
@@ -156,7 +222,8 @@ class ToolBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           gapW16,
-          SizedBox(width: 160,
+          SizedBox(
+            width: 160,
             child: ElevatedButton.icon(
               style: const ButtonStyle(
                 elevation: MaterialStatePropertyAll(8),
@@ -170,8 +237,9 @@ class ToolBar extends StatelessWidget {
           ),
           gapW16,
           showSubmit
-              ? SizedBox(width: 160,
-                child: ElevatedButton.icon(
+              ? SizedBox(
+                  width: 160,
+                  child: ElevatedButton.icon(
                     style: const ButtonStyle(
                       elevation: MaterialStatePropertyAll(8),
                     ),
@@ -181,7 +249,7 @@ class ToolBar extends StatelessWidget {
                     icon: const Icon(Icons.send),
                     label: const Text('Send'),
                   ),
-              )
+                )
               : gapW8,
           gapW16,
         ],

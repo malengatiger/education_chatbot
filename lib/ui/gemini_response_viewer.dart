@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/ui/chat_widget.dart';
+import 'package:edu_chatbot/ui/rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 import '../data/exam_link.dart';
 import '../data/gemini/gemini_response.dart';
@@ -128,10 +129,8 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: SingleChildScrollView(
-                                child: Text(getResponseString(),
-                                    style: myTextStyle(context, Colors.black,
-                                        16, FontWeight.normal)),
-                              ),
+                                  child: MarkdownWidget(
+                                      text: getResponseString())),
                             )),
                       ),
                     ],
@@ -142,46 +141,19 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
             _showRatingBar
                 ? Positioned(
                     bottom: 12,
-                    right: 48,
-                    child: Card(
-                      elevation: 16,
-                      color: Colors.amber[200],
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: RatingBar.builder(
-                          initialRating: 0,
-                          minRating: 1,
-                          direction: Axis.horizontal,
-                          allowHalfRating: false,
-                          itemCount: 5,
-                          itemPadding:
-                              const EdgeInsets.symmetric(horizontal: 4.0),
-                          itemBuilder: (context, _) =>  Icon(
-                            Icons.star,
-                            color: Colors.pink[700],
-                          ),
-                          onRatingUpdate: (rating) async {
-                            pp('$mm 🍎🍎🍎 onRatingUpdate: rating: 🍎$rating 🍎 send to backend ...');
-                            isRated = true;
-                            ratingUpdated = rating.round();
-                            _sendRating(rating
-                                .round()); // Convert the floating-point number to an integer
-                            pp('$mm 🍎🍎🍎 onRatingUpdate: rating:  wait 2 seconds ...');
-                            await Future.delayed(
-                                const Duration(milliseconds: 2000), () {
-                              pp('$mm 🍎🍎🍎 onRatingUpdate: Future.delayed fired');
-                              try {
-                                if (mounted) {
-                                  Navigator.of(context).pop();
-                                }
-                              } catch (e) {
-                                pp('$mm 👿👿👿 Error with Navigator popping: 👿$e 👿');
-                              }
+                    left: 12,
+                    child: GeminiRatingWidget(
+                        onRating: (mRating) {
+                          if (mounted) {
+                            setState(() {
+                              isRated = true;
+                              ratingUpdated = mRating.round();
                             });
-                          },
-                        ),
-                      ),
-                    ),
+                          }
+                          _sendRating(mRating.round());
+                          Navigator.of(context).pop();
+                        },
+                        visible: true),
                   )
                 : gapW8,
           ],

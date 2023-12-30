@@ -16,7 +16,7 @@ class GeminiRatingWidget extends StatelessWidget {
     return visible
         ? Card(
             elevation: 12,
-            color: Colors.blue,
+            color: Colors.amber[200],
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: RatingBar.builder(
@@ -32,7 +32,10 @@ class GeminiRatingWidget extends StatelessWidget {
                 ),
                 onRatingUpdate: (rating) {
                   pp('🍎🍎🍎 onRatingUpdate: rating: 🍎$rating 🍎 calling onRating() ...');
-                  onRating(rating);
+                  Future.delayed(const Duration(milliseconds: 1000),(){
+                    onRating(rating);
+
+                  });
                 },
               ),
             ),
