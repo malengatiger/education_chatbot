@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/generic_image_response_viewer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -67,7 +68,11 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
       _navigateToGenericImageResponse(_images.first, responseText);
       pp('$mm ... response: $responseText');
     } catch (e) {
-      pp('$mm ERROR $e');
+      pp('$mm _sendImageToAI: ERROR $e');
+      if (e is CompressError) {
+        pp('$mm 👿👿👿👿compress error: ${e.message} 👿👿👿');
+        pp('${e.stackTrace}');
+      }
       if (mounted) {
         showErrorDialog(context, 'Fell down, Boss! 🍎 $e');
       }
@@ -93,6 +98,8 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
   String _getPromptContext() {
     var sb = StringBuffer();
     sb.write('Tell me, in detail, what you see in the image. \n');
+    sb.write(
+        'Keep the discussion and solution at high school or freshman college level. \n');
     sb.write(
         'If it is mathematics or physics, solve the problem and return response in LaTex format. \n');
     sb.write(
@@ -128,7 +135,8 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                         setState(() {
                           _useCamera = value;
                         });
-                        _pickImage(value? ImageSource.camera: ImageSource.gallery);
+                        _pickImage(
+                            value ? ImageSource.camera : ImageSource.gallery);
                       },
                     ),
                   ],

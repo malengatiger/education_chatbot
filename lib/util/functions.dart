@@ -61,8 +61,9 @@ Future<File> compressImage({required File file, required int quality}) async {
   final tempDir = await getTemporaryDirectory();
   final tempPath = tempDir.path;
   final fileName = file.path.split('/').last;
-  final compressedFile = File('$tempPath/$fileName');
-  pp('compressing file, size: ${await file.length()} bytes');
+  final fileType = fileName.split('.').last;
+  final compressedFile = File('$tempPath/f_${DateTime.now().millisecondsSinceEpoch}.$fileType');
+  pp('🌍🌍🌍🌍compressing file, size: ${await file.length()} bytes');
   final fileSize = await file.length();
   if (fileSize > 2 * 1024 * 1024) {
     final result = await FlutterImageCompress.compressAndGetFile(
@@ -72,14 +73,14 @@ Future<File> compressImage({required File file, required int quality}) async {
     );
     var mFile = File(result!.path);
     var size = await mFile.length();
-    pp('compressed file, size: $size bytes');
+    pp('🌍🌍🌍🌍compressed file, size: $size bytes');
     if (size > 4 * 1024 * 1024) {
-      pp('compressed file still too big, bigger than 4MB: ${await mFile.length()} bytes');
+      pp('🌍🌍🌍🌍compressed file still too big, bigger than 4MB: ${await mFile.length()} bytes');
       return compressImage(file: mFile, quality: quality);
     }
     return mFile;
   } else {
-    pp('file NOT compressed, no need to, size: ${await file.length()} bytes');
+    pp('🌍🌍🌍🌍file NOT compressed, no need to, size: ${await file.length()} bytes');
     return file;
   }
 }

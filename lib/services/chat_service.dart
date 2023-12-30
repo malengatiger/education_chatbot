@@ -136,9 +136,13 @@ class ChatService {
       File imageFile, String prompt) async {
     var length = await imageFile.length();
     fun.pp('$mm .... sendGenericImageTextPrompt starting ... '
-        'imageFile: $length');
-    if (length > (1024 * 1024 * 4)) {
-      throw Exception('Image file too big');
+        'imageFile: $length bytes');
+    var compressed = await compressImage(file: imageFile,
+        quality: 80);
+    var compLength = await compressed.length();
+
+    if (compLength > (1024 * 1024 * 3)) {
+      throw Exception('Image file too big: ${compLength/1024/1024}MB');
     }
     String urlPrefix = ChatbotEnvironment.getGeminiUrl();
     String url = '${urlPrefix}textImage/sendTextImagePrompt';
