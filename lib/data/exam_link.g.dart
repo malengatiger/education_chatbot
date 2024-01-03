@@ -14,7 +14,6 @@ ExamLink _$ExamLinkFromJson(Map<String, dynamic> json) => ExamLink(
       json['subjectId'] as int?,
       json['pageImageZipUrl'] as String?,
       json['documentTitle'] as String?,
-      json['examText'] as String?,
     );
 
 Map<String, dynamic> _$ExamLinkToJson(ExamLink instance) => <String, dynamic>{
@@ -25,5 +24,4 @@ Map<String, dynamic> _$ExamLinkToJson(ExamLink instance) => <String, dynamic>{
       'subjectId': instance.subjectId,
       'pageImageZipUrl': instance.pageImageZipUrl,
       'documentTitle': instance.documentTitle,
-      'examText': instance.examText,
     };

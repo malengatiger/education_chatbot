@@ -2,11 +2,10 @@ import 'dart:io';
 
 import 'package:edu_chatbot/data/exam_page_image.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
-import 'package:edu_chatbot/ui/chat_widget.dart';
 import 'package:edu_chatbot/ui/rating_widget.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
-
+import 'markdown_widget.dart' as md;
 import '../data/exam_link.dart';
 import '../data/gemini/gemini_response.dart';
 import '../data/gemini_response_rating.dart';
@@ -51,9 +50,9 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
       var gr = GeminiResponseRating(
           rating: mRating,
           date: DateTime.now().toIso8601String(),
-          examPageImageId: widget.examPageImage.id,
+          pageNumber: widget.examPageImage.id,
           responseText: getResponseString(),
-          prompt: widget.prompt);
+          prompt: widget.prompt, examLinkId: widget.examLink.id!);
 
       var res = await widget.repository.addRating(gr);
       pp('$mm 💙💙💙💙 GeminiResponseRating sent to backend!');
@@ -68,6 +67,8 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
 
   @override
   Widget build(BuildContext context) {
+    var bright = MediaQuery.of(context).platformBrightness;
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -99,7 +100,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                 icon: const Icon(Icons.share))
           ],
         ),
-        backgroundColor: Colors.brown.shade100,
+        // backgroundColor: bright == Brightness.light?Colors.brown.shade100:Colors.black26,
         body: Stack(
           children: [
             Column(
@@ -107,13 +108,14 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                 gapH8,
                 Card(
                   elevation: 8,
+                  // color: Theme.of(context).primaryColor,
                   child: Padding(
                     padding: const EdgeInsets.only(
                         left: 48.0, right: 48.0, top: 8.0, bottom: 8.0),
                     child: Text('SgelaAI Response',
                         style: myTextStyle(
                             context,
-                            Theme.of(context).primaryColor,
+                            bright == Brightness.dark?Colors.white:Theme.of(context).primaryColor,
                             20,
                             FontWeight.w900)),
                   ),
@@ -123,15 +125,12 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                            elevation: 8,
-                            shape: getDefaultRoundedBorder(),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: SingleChildScrollView(
-                                  child: MarkdownWidget(
-                                      text: getResponseString())),
-                            )),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SingleChildScrollView(
+                              child: md.MarkdownWidget(
+                                  text: getResponseString())),
+                        ),
                       ),
                     ],
                   ),

@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:badges/badges.dart' as bd;
-import 'package:edu_chatbot/ui/chat_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 
@@ -8,6 +9,7 @@ import '../data/subject.dart';
 import '../repositories/repository.dart';
 import '../services/chat_service.dart';
 import '../util/functions.dart';
+import 'markdown_widget.dart';
 
 class TextChat extends StatefulWidget {
   const TextChat(
@@ -37,7 +39,7 @@ class TextChatState extends State<TextChat>
   static const mm = '🍎🍎🍎TextChat 🍎';
   bool busy = false;
   int chatCount = 0;
-  List<String> promptHistory = [];
+  List<String> responseHistory = [];
 
   @override
   void initState() {
@@ -48,6 +50,7 @@ class TextChatState extends State<TextChat>
   @override
   void dispose() {
     _controller.dispose();
+    timer.cancel();
     super.dispose();
   }
 
@@ -61,30 +64,56 @@ class TextChatState extends State<TextChat>
     }
     pp('$mm .............. sending chat prompt: \n🍎🍎$prompt 🍎🍎\n');
 
+    _startTimer();
     setState(() {
       busy = true;
     });
     try {
       var resp = await widget.chatService.sendChatPrompt(prompt);
       pp('$mm ....... chat response: \n$resp\n');
-      responseText = resp;
-      bool yes = isMarkdownFormat(responseText);
-      if (yes) {
-        isMarkDown = true;
-        pp('$mm ....... isMarkdownFormat: 🍎$yes 🍎');
+      responseText += '\n\n$resp$responseText';
+      bool yesMarkdown = isMarkdownFormat(responseText);
+      bool yesLaTex = isValidLaTeXString(responseText);
+      pp('$mm ....... chat response, 🍎yesMarkdown: $yesMarkdown 🍎yesLaTex: $yesLaTex');
+
+      if (yesMarkdown) {
+        if (yesLaTex) {
+          isMarkDown = false;
+          responseText = replaceTextInPlace(responseText);
+        } else {
+          isMarkDown = true;
+        }
       } else {
         isMarkDown = false;
       }
       chatCount++;
-      promptHistory.add(resp);
+      responseHistory.add(resp);
     } catch (e) {
       pp(e);
       if (mounted) {
         showErrorDialog(context, 'Error: $e');
       }
     }
+    timer.cancel();
     setState(() {
       busy = false;
+    });
+  }
+
+  late Timer timer;
+  String elapsed = '00:00:00';
+
+  void _startTimer() {
+    int timeInSeconds = 0; // Replace this with the actual time in seconds
+
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      timeInSeconds++;
+      elapsed = getFormattedTime(timeInSeconds: timeInSeconds);
+      if (mounted) {
+        setState(() {
+          // Update the UI with the elapsed time
+        });
+      }
     });
   }
 
@@ -94,18 +123,23 @@ class TextChatState extends State<TextChat>
         child: Scaffold(
             appBar: AppBar(
               title: const Text('SgelaAI Chatbot'),
+              actions: [
+                IconButton(onPressed: (){
+                  pp('$mm ... share the response ... 🍎');
+                }, icon: const Icon(Icons.share))
+              ],
             ),
             backgroundColor: Colors.brown[100],
             body: Padding(
               padding: const EdgeInsets.all(8.0),
               child: bd.Badge(
-                position: bd.BadgePosition.topEnd(end:8, top:-8),
+                position: bd.BadgePosition.topEnd(end: 8, top: -8),
                 badgeStyle: const bd.BadgeStyle(
                   elevation: 16,
                   padding: EdgeInsets.all(12.0),
                 ),
                 badgeContent: Text(
-                  '${(responseText.length/1024).toStringAsFixed(0)}K',
+                  '${(responseText.length / 1024).toStringAsFixed(0)}K',
                   style:
                       myTextStyle(context, Colors.white, 16, FontWeight.normal),
                 ),
@@ -114,13 +148,18 @@ class TextChatState extends State<TextChat>
                     Expanded(
                       child: isMarkDown
                           ? MarkdownWidget(text: responseText)
-                          : TeXView(
-                              renderingEngine:
-                                  const TeXViewRenderingEngine.katex(),
-                              child: TeXViewColumn(
-                                children: [
-                                  TeXViewDocument(responseText),
-                                ],
+                          : Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: TeXView(
+                                  renderingEngine:
+                                      const TeXViewRenderingEngine.katex(),
+                                  child: TeXViewColumn(
+                                    children: [
+                                      TeXViewDocument(responseText),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                     ),
@@ -136,29 +175,62 @@ class TextChatState extends State<TextChat>
                               maxLines: 4,
                               decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  label: Text(
-                                      'SgelaAI question can be entered here')),
+                                  label: Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Text(
+                                        'SgelaAI question should be entered here'),
+                                  )),
                             ),
                             gapH16,
                             busy
-                                ? const SizedBox(
-                                    height: 18,
-                                    width: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 6,
-                                      backgroundColor: Colors.pink,
-                                    ),
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      const SizedBox(
+                                        height: 18,
+                                        width: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 6,
+                                          backgroundColor: Colors.pink,
+                                        ),
+                                      ),
+                                      gapW16,
+                                      gapW16,
+                                      Text(
+                                        elapsed,
+                                        style: myTextStyle(context, Colors.blue,
+                                            14, FontWeight.bold),
+                                      ),
+                                    ],
                                   )
-                                : ElevatedButton.icon(
-                                    style: const ButtonStyle(
-                                      elevation: MaterialStatePropertyAll(16),
-                                    ),
-                                    onPressed: () {
-                                      FocusScope.of(context).unfocus();
-                                      _sendChatPrompt();
-                                    },
-                                    icon: const Icon(Icons.send),
-                                    label: const Text('Send to SgelaAI')),
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '${responseHistory.length}',
+                                        style: myTextStyle(
+                                            context,
+                                            Colors.grey[400]!,
+                                            24,
+                                            FontWeight.w900),
+                                      ),
+                                      gapW16,
+                                      gapW16,
+                                      ElevatedButton.icon(
+                                          style: const ButtonStyle(
+                                            elevation:
+                                                MaterialStatePropertyAll(16),
+                                          ),
+                                          onPressed: () {
+                                            FocusScope.of(context).unfocus();
+                                            _sendChatPrompt();
+                                          },
+                                          icon: const Icon(Icons.send),
+                                          label: const Text('Send to SgelaAI')),
+                                    ],
+                                  ),
                             gapH16,
                           ],
                         ))),

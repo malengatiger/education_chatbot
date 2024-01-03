@@ -18,7 +18,7 @@ class LocalDataService {
     pp('$mm initialize sqlite ...');
 
     db = await openDatabase(
-      join(await getDatabasesPath(), 'skunk034db'),
+      join(await getDatabasesPath(), 'skunk036db'),
       version: 1,
     );
     pp('$mm SQLite Database is open: ${db.isOpen} 🔵🔵 ${db.path}');
@@ -181,7 +181,7 @@ class LocalDataService {
   Future<void> addExamImage(ExamPageImage image) async {
     try {
       await db.insert('exam_images', image.toJson());
-      pp('$mm ExamImage added to local database 🍎🍎 pageIndex: ${image.pageIndex}');
+      pp('$mm ExamPageImage added to local database 🍎🍎 pageIndex: ${image.pageIndex}');
     } catch (e) {
       pp("$mm addExamImage: ERROR: 👿${e.toString()} 👿🏽");
     }
@@ -224,6 +224,9 @@ class LocalDataService {
       try {
         var obj = examLink.toJson();
         await db.insert('exam_links', obj);
+        pp('$mm check problem ... ');
+        obj['examText'] = '';
+        myPrettyJsonPrint(obj);
         cnt++;
         // pp('$mm examLink #$cnt added to local db, '
         //     'id: 🍎${examLink.id} 🔵🔵 title: ${examLink.title}');

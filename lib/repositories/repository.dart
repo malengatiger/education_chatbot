@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:edu_chatbot/data/gemini_response_rating.dart';
 import 'package:edu_chatbot/data/subject.dart';
@@ -13,6 +14,7 @@ import 'package:path/path.dart' as path;
 import '../data/exam_link.dart';
 import '../data/exam_page_image.dart';
 import '../util/functions.dart';
+import '../util/image_file_util.dart';
 
 class Repository {
   final DioUtil dioUtil;
@@ -24,34 +26,29 @@ class Repository {
 
   Repository(this.dioUtil, this.localDataService, this.dio);
 
-  Future<List<ExamPageImage>> getExamImages(int examLinkId) async {
+  Future<List<ExamPageImage>> getExamPageImages(
+      ExamLink examLink, bool useStream) async {
     pp('$mm ... getExamPageImages ....');
     List<ExamPageImage> images = [];
     try {
-      images = await localDataService.getExamImages(examLinkId);
+      images = await localDataService.getExamImages(examLink.id!);
       if (images.isNotEmpty) {
-        pp('$mm ... getExamPageImages .... from local store: ${images.length}');
+        pp('$mm ... getExamPageImages .... found in local store: ${images.length}'
+            '... no need to download ');
         return images;
       }
-      String urlPrefix = ChatbotEnvironment.getSkunkUrl();
-      var path = '${urlPrefix}links/getExamPageImages';
-      List res = await dioUtil.sendGetRequest(path, {'examLinkId': examLinkId});
-      for (var r in res) {
-        var map = {
-          'examLinkId': r['examLink']['id'],
-          'downloadUrl': r['downloadUrl'],
-          'pageIndex': r['pageIndex'],
-          'mimeType': r['mimeType'],
-          'id': r['id']
-        };
-        images.add(ExamPageImage.fromJson(map));
-      }
+      var imageFiles = await ImageFileUtil.getFiles(examLink);
       int index = 1;
-      for (var img in images) {
-        img.bytes = await downloadFile(img.downloadUrl!);
+      for (var imgFile in imageFiles) {
+        var img = ExamPageImage(examLink.id!, null,
+            examLink.pageImageZipUrl, imgFile.readAsBytesSync(),
+            index, 'png');
         await localDataService.addExamImage(img);
-        _streamController.sink.add(index);
+        images.add(img);
         index++;
+      }
+      if (useStream) {
+        _streamController.sink.add(index);
       }
       pp('$mm ... getExamPageImages .... from remote store: ${images.length}');
 
@@ -103,12 +100,14 @@ class Repository {
 
   Stream<int> get pageStream => _streamController.stream;
 
-  static Future<List<int>> downloadFile(String url) async {
-    pp('$mm downloading file from ... $url');
+  static Future<List<File>> downloadFile(String url) async {
+    pp('$mm .... downloading file .......................... ');
     try {
       var response = await http.get(Uri.parse(url));
       var bytes = response.bodyBytes;
-      return bytes;
+      var mFile = File('someFile');
+      mFile.readAsBytesSync();
+      return unpackZipFile(mFile);
     } catch (e) {
       pp('Error downloading file: $e');
       rethrow;
@@ -249,4 +248,37 @@ class Repository {
         " 💙 $pdfPath length: ${(pdfFile.length)} bytes");
     return pdfFile;
   }
+
+  static List<File> unpackZipFile(File zipFile) {
+    final destinationDirectory = Directory('zipFiles');
+
+    if (!zipFile.existsSync()) {
+      throw Exception('Zip file does not exist');
+    }
+
+    if (!destinationDirectory.existsSync()) {
+      destinationDirectory.createSync(recursive: true);
+    }
+
+    final archive = ZipDecoder().decodeBytes(zipFile.readAsBytesSync());
+
+    final files = <File>[];
+
+    for (final file in archive) {
+      final filePath = '${destinationDirectory.path}/${file.name}';
+      final outputFile = File(filePath);
+
+      if (file.isFile) {
+        outputFile.createSync(recursive: true);
+        outputFile.writeAsBytesSync(file.content as List<int>);
+        files.add(outputFile);
+      } else {
+        outputFile.createSync(recursive: true);
+        files.add(outputFile);
+      }
+    }
+
+    return files;
+  }
+
 }

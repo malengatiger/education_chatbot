@@ -3,6 +3,7 @@ import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/chat_service.dart';
+import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:edu_chatbot/services/you_tube_service.dart';
 import 'package:edu_chatbot/ui/exam_paper_pages.dart';
 import 'package:edu_chatbot/ui/text_chat.dart';
@@ -22,10 +23,13 @@ class ExamLinkListWidget extends StatefulWidget {
   final LocalDataService localDataService;
   final ChatService chatService;
   final YouTubeService youTubeService;
+  final DownloaderService downloaderService;
   const ExamLinkListWidget({
     super.key,
     required this.subject,
-    required this.repository, required this.localDataService, required this.chatService, required this.youTubeService,
+    required this.repository, required this.localDataService,
+    required this.chatService, required this.youTubeService,
+    required this.downloaderService,
   });
 
   @override
@@ -51,14 +55,17 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
           await widget.repository.getExamLinks(widget.subject.id!, false);
       pp('$mm fetchedExamLinks: ${fetchedExamLinks.length}');
 
-      for (var link in fetchedExamLinks) {
-        if (!link.title!.contains('Afrikaans')) {
-          filtered.add(link);
-        }
-      }
+      //download exam page images for the subject
+      // widget.downloaderService.downloadSubjectExamPageImages(widget.subject);
+      //hide Afrikaans exams
+      // for (var link in fetchedExamLinks) {
+      //   if (!link.title!.contains('Afrikaans')) {
+      //     filtered.add(link);
+      //   }
+      // }
       setState(() {
-        examLinks = filtered;
-        filteredExamLinks = filtered;
+        examLinks = fetchedExamLinks;
+        filteredExamLinks = fetchedExamLinks;
       });
     } catch (e) {
       // Handle error
@@ -209,6 +216,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
       examLink: examLink,
       repository: widget.repository,
       chatService: widget.chatService,
+      downloaderService: widget.downloaderService,
     ));
   }
   void _navigateToYouTube() {

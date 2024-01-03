@@ -44,38 +44,38 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyB_DF0tAfvuTmzJB-dKSMVO4yQIeFCNDls',
-    appId: '1:458451555038:web:06bfd7e3ba6403ee76a84f',
-    messagingSenderId: '458451555038',
-    projectId: 'stealthcannabis',
-    authDomain: 'stealthcannabis.firebaseapp.com',
-    storageBucket: 'stealthcannabis.appspot.com',
-    measurementId: 'G-1N2X2RT4D5',
+    apiKey: 'AIzaSyA8TfE2LLP94AvCChofXqJG-rw4hjm6zPA',
+    appId: '1:696652473894:web:235a912a6dd7a4da3528e7',
+    messagingSenderId: '696652473894',
+    projectId: 'skunkworks-ai',
+    authDomain: 'skunkworks-ai.firebaseapp.com',
+    storageBucket: 'skunkworks-ai.appspot.com',
+    measurementId: 'G-LK06XB0YR9',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAnClIgwtPS-9h_zxvAFU8AL3vym4FY8Es',
-    appId: '1:458451555038:android:57ac1b248e133eae76a84f',
-    messagingSenderId: '458451555038',
-    projectId: 'stealthcannabis',
-    storageBucket: 'stealthcannabis.appspot.com',
+    apiKey: 'AIzaSyCSauhTHXtszIYIQSEUJcjilhokor-FStA',
+    appId: '1:696652473894:android:31db5eac9912b3883528e7',
+    messagingSenderId: '696652473894',
+    projectId: 'skunkworks-ai',
+    storageBucket: 'skunkworks-ai.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDajSyhEBj03pGGcfG5p9GUYWiwsCv6y4Y',
-    appId: '1:458451555038:ios:00287700509ce66c76a84f',
-    messagingSenderId: '458451555038',
-    projectId: 'stealthcannabis',
-    storageBucket: 'stealthcannabis.appspot.com',
+    apiKey: 'AIzaSyAcL6RgYP_X3n3t_gHkg8s5XGn9VDe1kLQ',
+    appId: '1:696652473894:ios:66e17947aa3547463528e7',
+    messagingSenderId: '696652473894',
+    projectId: 'skunkworks-ai',
+    storageBucket: 'skunkworks-ai.appspot.com',
     iosBundleId: 'com.boha.eduChatbot',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDajSyhEBj03pGGcfG5p9GUYWiwsCv6y4Y',
-    appId: '1:458451555038:ios:52fefbc5579ea71c76a84f',
-    messagingSenderId: '458451555038',
-    projectId: 'stealthcannabis',
-    storageBucket: 'stealthcannabis.appspot.com',
+    apiKey: 'AIzaSyAcL6RgYP_X3n3t_gHkg8s5XGn9VDe1kLQ',
+    appId: '1:696652473894:ios:bbf48d95e3fa386b3528e7',
+    messagingSenderId: '696652473894',
+    projectId: 'skunkworks-ai',
+    storageBucket: 'skunkworks-ai.appspot.com',
     iosBundleId: 'com.boha.eduChatbot.RunnerTests',
   );
 }

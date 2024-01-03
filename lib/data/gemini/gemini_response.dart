@@ -16,10 +16,10 @@ class MyGeminiResponse {
   MyGeminiResponse({this.candidates, this.promptFeedback});
 
   factory MyGeminiResponse.fromJson(Map<String, dynamic> json) =>
-      _$GeminiResponseFromJson(json);
+      _$MyGeminiResponseFromJson(json);
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = _$GeminiResponseToJson(this);
+    final Map<String, dynamic> data = _$MyGeminiResponseToJson(this);
 
     return data;
   }}

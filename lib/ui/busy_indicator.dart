@@ -61,9 +61,11 @@ class _BusyIndicatorState extends State<BusyIndicator> {
   @override
   Widget build(BuildContext context) {
     var height = 160.0;
+    var show = false;
     if (widget.showClock != null) {
       if (widget.showClock!) {
         height = 300.0;
+        show = widget.showClock!;
       }
     }
     return Card(
@@ -90,8 +92,10 @@ class _BusyIndicatorState extends State<BusyIndicator> {
                 widget.caption == null
                     ? gapW8
                     : Text(widget.caption!, style: myTextStyleSmall(context)),
-                gapH8,
+                gapH16,
+                gapH16,
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text('Elapsed Time: '),
                     gapW16,
@@ -100,14 +104,33 @@ class _BusyIndicatorState extends State<BusyIndicator> {
                             context, Colors.pink, 18, FontWeight.bold)),
                   ],
                 ),
-                AnalogClock(
-                  dateTime: DateTime.now(),
-                  isKeepTime: false,
-                  child: const Align(
-                    alignment: FractionalOffset(0.5, 0.75),
-                    child: Text('GMT+2'), //todo - use country db to set this
-                  ),
-                ),
+                gapH8,
+                show
+                    ? SizedBox(
+                        height: 120,
+                        width: 120,
+                        child: Card(
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(80.0)),
+                          // Adjust the value as needed
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: AnalogClock(
+                              secondHandColor: Colors.red,
+                              dateTime: DateTime.now(),
+                              dialBorderColor: Colors.green,
+                              isKeepTime: true,
+                              child: const Align(
+                                alignment: FractionalOffset(0.5, 0.75),
+                                child: Text(
+                                    'GMT+2'), //todo - use country db to set this
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : gapW8,
               ],
             ),
           ),

@@ -1,6 +1,8 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/services/downloader_isolate.dart';
+import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
 
@@ -8,6 +10,7 @@ import '../services/chat_service.dart';
 import '../services/local_data_service.dart';
 import '../services/you_tube_service.dart';
 import '../util/navigation_util.dart';
+import '../util/prefs.dart';
 import 'exam_link_list_widget.dart';
 import 'image_picker_widget.dart';
 
@@ -17,11 +20,14 @@ class SubjectSearch extends StatefulWidget {
   final ChatService chatService;
   final YouTubeService youTubeService;
 
+  final DownloaderService downloaderService;
+
   const SubjectSearch(
       {super.key,
       required this.repository,
       required this.localDataService,
-      required this.chatService, required this.youTubeService});
+      required this.chatService,
+      required this.youTubeService, required this.downloaderService});
 
   @override
   SubjectSearchState createState() => SubjectSearchState();
@@ -41,7 +47,7 @@ class SubjectSearchState extends State<SubjectSearch> {
   void _getSubjects() async {
     try {
       List<Subject> subjects = await widget.repository.getSubjects(false);
-      subjects.sort((a,b) => a.title!.compareTo(b.title!));
+      subjects.sort((a, b) => a.title!.compareTo(b.title!));
       setState(() {
         _subjects = subjects;
         _filteredSubjects = subjects;
@@ -62,19 +68,24 @@ class SubjectSearchState extends State<SubjectSearch> {
   }
 
   _navigateToAI(BuildContext context) {
-    NavigationUtils.navigateToPage(context: context, widget:  ImagePickerWidget(
-      chatService: widget.chatService,
-    ));
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: ImagePickerWidget(
+          chatService: widget.chatService,
+        ));
   }
 
   navigateToExamLinkListWidget(BuildContext context, Subject subject) {
-    NavigationUtils.navigateToPage(context: context, widget: ExamLinkListWidget(
-      subject: subject,
-      repository: widget.repository,
-      localDataService: widget.localDataService,
-      chatService: widget.chatService,
-      youTubeService: widget.youTubeService,
-    ));
+    NavigationUtils.navigateToPage(
+        context: context,
+        widget: ExamLinkListWidget(
+          subject: subject,
+          downloaderService: widget.downloaderService,
+          repository: widget.repository,
+          localDataService: widget.localDataService,
+          chatService: widget.chatService,
+          youTubeService: widget.youTubeService,
+        ));
   }
 
   @override
@@ -83,12 +94,15 @@ class SubjectSearchState extends State<SubjectSearch> {
     super.dispose();
   }
 
+  int mode = 0;
+
   @override
   Widget build(BuildContext context) {
     final TextStyle titleStyle =
         Theme.of(context).textTheme.bodySmall!.copyWith(
               fontWeight: FontWeight.w900,
             );
+    var bright = MediaQuery.of(context).platformBrightness;
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -96,11 +110,14 @@ class SubjectSearchState extends State<SubjectSearch> {
       child: SafeArea(
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('SgelaAI'),
+            title:  Text('SgelaAI', style: myTextStyle(context, Theme.of(context).primaryColor,
+                24, FontWeight.w900),),
             actions: [
               IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.refresh),
+                onPressed: () async {
+                  await _handleMode(bright);
+                },
+                icon: Icon(mode == 1 ? Icons.dark_mode : Icons.light_mode),
               ),
               IconButton(
                 onPressed: () {
@@ -110,7 +127,7 @@ class SubjectSearchState extends State<SubjectSearch> {
               )
             ],
           ),
-          backgroundColor: Colors.brown.shade100,
+          // backgroundColor: bright == Brightness.light?Colors.brown.shade100:Colors.black,
           body: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -170,5 +187,26 @@ class SubjectSearchState extends State<SubjectSearch> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleMode(Brightness bright) async {
+    mode = await Prefs.getMode();
+    if (mode > -1) {
+      switch (mode) {
+        case 1:
+          DarkLightControl.setLightMode();
+          break;
+        case 0:
+          DarkLightControl.setDarkMode();
+          break;
+      }
+    } else {
+      if (bright == Brightness.light) {
+        DarkLightControl.setLightMode();
+      } else {
+        DarkLightControl.setDarkMode();
+
+      }
+    }
   }
 }

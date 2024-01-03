@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "458451555038",
-    "project_id": "stealthcannabis",
-    "storage_bucket": "stealthcannabis.appspot.com"
+    "project_number": "696652473894",
+    "project_id": "skunkworks-ai",
+    "storage_bucket": "skunkworks-ai.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:458451555038:android:57ac1b248e133eae76a84f",
+        "mobilesdk_app_id": "1:696652473894:android:31db5eac9912b3883528e7",
         "android_client_info": {
           "package_name": "com.boha.edu_chatbot"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "458451555038-j35vke0l5j6mh2ne1mvt5q84e4a5jk1f.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAnClIgwtPS-9h_zxvAFU8AL3vym4FY8Es"
+          "current_key": "AIzaSyCSauhTHXtszIYIQSEUJcjilhokor-FStA"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "458451555038-j35vke0l5j6mh2ne1mvt5q84e4a5jk1f.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

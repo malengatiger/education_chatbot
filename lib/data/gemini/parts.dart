@@ -9,10 +9,10 @@ class MyParts {
   MyParts({this.text});
 
   factory MyParts.fromJson(Map<String, dynamic> json) =>
-      _$PartsFromJson(json);
+      _$MyPartsFromJson(json);
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = _$PartsToJson(this);
+    final Map<String, dynamic> data = _$MyPartsToJson(this);
 
     return data;
   }}

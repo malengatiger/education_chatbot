@@ -12,6 +12,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 
 // import 'package:image/image.dart' as ui;
+import '../data/exam_link.dart';
 import '../data/exam_page_image.dart';
 
 class MathViewer extends StatefulWidget {
@@ -23,7 +24,7 @@ class MathViewer extends StatefulWidget {
       required this.selectedImages,
       required this.onExit,
       required this.repository,
-      required this.prompt});
+      required this.prompt, required this.examLink});
 
   final String text, prompt;
   static const mm = '💙💙💙💙 MathViewer 💙';
@@ -32,6 +33,7 @@ class MathViewer extends StatefulWidget {
   final Function(List<ExamPageImage>) onRerun;
   final List<ExamPageImage> selectedImages;
   final Repository repository;
+  final ExamLink examLink;
 
   @override
   State<MathViewer> createState() => _MathViewerState();
@@ -68,9 +70,10 @@ class _MathViewerState extends State<MathViewer> {
       var gr = GeminiResponseRating(
           rating: mRating,
           date: DateTime.now().toIso8601String(),
-          examPageImageId: examPageImage.id,
+          pageNumber: examPageImage.pageIndex,
           responseText: responseText,
-          prompt: widget.prompt);
+          prompt: widget.prompt,
+          examLinkId: widget.examLink.id!);
       pp('💙💙💙💙 GeminiResponseRating sent to backend!');
       myPrettyJsonPrint(gr.toJson());
       widget.repository.addRating(gr);

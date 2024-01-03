@@ -16,7 +16,7 @@ class ExamPaperHeader extends StatelessWidget {
       fontWeight: FontWeight.w900,
     );
     return SizedBox(
-      height: 260,
+      height: 240,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Card(
@@ -81,15 +81,12 @@ class ExamPaperHeader extends StatelessWidget {
                       ],
                     ),
                   ),
+                  gapH16,
                   Padding(
                     padding: const EdgeInsets.all(4.0),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${examLink.documentTitle}',
-                          style: myTextStyleSmall(context),
-                        )
-                      ],
+                    child: Text(
+                      '${examLink.documentTitle}',
+                      style: myTextStyleMediumBold(context),
                     ),
                   ),
                 ],

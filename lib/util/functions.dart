@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
+import 'package:edu_chatbot/util/prefs.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +23,8 @@ import 'package:video_thumbnail/video_thumbnail.dart' as vt;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import '../data/gemini/gemini_response.dart';
+import '../main.dart';
+import 'dark_light_control.dart';
 import 'emojis.dart';
 
 pp(dynamic msg) {
@@ -118,6 +121,7 @@ Future<File?> compressImage({required File file, required int quality}) async {
     }
     return resultFile;
   }
+  return file;
 }
 
 String getResponseString(MyGeminiResponse geminiResponse) {
@@ -166,17 +170,65 @@ bool isMarkdownFormat(String text) {
   return false;
 }
 
+Future<void> handleMode(Brightness bright) async {
+  pp('functions: 🍎handleMode 🍎 '
+      'mode could be changing, mode: ${bright.name}');
+
+  mode = await Prefs.getMode();
+  if (mode > -1) {
+    switch (mode) {
+      case 1:
+        DarkLightControl.setLightMode();
+        break;
+      case 0:
+        DarkLightControl.setDarkMode();
+        break;
+    }
+  } else {
+    if (bright == Brightness.light) {
+      DarkLightControl.setLightMode();
+    } else {
+      DarkLightControl.setDarkMode();
+
+    }
+  }
+}
+
+String replaceTextInPlace(String text) {
+  const pattern = r'\*{1,2}';
+  final regex = RegExp(pattern);
+
+  return text.replaceAll(regex, '\n');
+}
+String getGenericPromptContext() {
+  StringBuffer sb = StringBuffer();
+  sb.write(
+      'My name is SgelaAI and I am a super tutor who knows everything. '
+          '\nI am here to help you study for all your high school and freshman college courses and subjects\n');
+
+  sb.write('Keep answers and responses suitable to the high school or college freshman level\n');
+  sb.write(
+      'Return responses in markdown format when there are no mathematical equations in the text.\n');
+  sb.write('If there are LaTex strings(math and physics equations) in the text, '
+      'then return response in LaTex format\n');
+  sb.write('Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
+  return sb.toString();
+}
 String getPromptContext() {
   StringBuffer sb = StringBuffer();
   sb.write(
-      'My name is SgelaAI and I am a super tutor who knows everything. I am here to help you study for all your high school courses and subjects\n');
-  sb.write('I answer questions that relates to the subject provided. \n');
-  sb.write('I keep my answers to the high school or college freshman level');
+      'My name is SgelaAI and I am a super tutor who knows everything. '
+          '\nI am here to help you study for all your high school and freshman college courses and subjects\n');
+  sb.write('Answer questions that relates to the subject provided. \n');
+  sb.write('Example is Subject: Mathematics\n');
+  sb.write('Keep answers and responses suitable to the high school or college freshman level\n');
   sb.write(
-      'I return all my responses in markdown format. I use headings and paragraphs to enhance readability');
+      'Return responses in markdown format when there are no mathematical equations in the text.\n');
+  sb.write('If there are LaTex strings(math and physics equations) in the text, '
+      'then return in LaTex format\n');
+  sb.write('Where appropriate use headings, paragraphs and sections to enhance readability when displayed.\n');
   return sb.toString();
 }
-
 
 void showErrorDialog(BuildContext context, String errorMessage) {
   showDialog(

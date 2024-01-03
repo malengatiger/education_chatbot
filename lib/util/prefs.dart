@@ -54,6 +54,21 @@ class Prefs {
     return country;
   }
 
+  static Future saveMode(int mode) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('mode', mode);
+    pp("🌽🌽🌽 Prefs: saveMode: 🌽 ${mode == 1? 'DARK':'LIGHT'} 🌽🌽🌽");
+    return null;
+  }
 
+  static Future<int> getMode() async {
+    var prefs = await SharedPreferences.getInstance();
+    var mode = prefs.getInt('mode');
+    if (mode == null) {
+      return -1;
+    }
+    pp("🌽🌽🌽 Prefs: getMode: 🌽 ${mode == 1? 'DARK':'LIGHT'} 🌽🌽🌽");
+    return mode;
+  }
 
 }

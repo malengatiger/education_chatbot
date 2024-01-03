@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/exam_link.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
+import 'package:edu_chatbot/services/downloader_isolate.dart';
 import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/ui/exam_paper_header.dart';
 import 'package:edu_chatbot/ui/gemini_response_viewer.dart';
@@ -24,12 +25,13 @@ class ExamPaperPages extends StatefulWidget {
   final ExamLink examLink;
   final Repository repository;
   final ChatService chatService;
+  final DownloaderService downloaderService;
 
   const ExamPaperPages(
       {super.key,
       required this.examLink,
       required this.repository,
-      required this.chatService});
+      required this.chatService, required this.downloaderService});
 
   @override
   ExamPaperPagesState createState() => ExamPaperPagesState();
@@ -69,9 +71,9 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
   late Timer timer;
 
   void _executeAfterDelay() {
-    timer = Timer(const Duration(seconds: 10), () {
+    timer = Timer(const Duration(seconds: 5), () {
       // Code to be executed after the delay of 10 seconds
-      pp('$mm Hiding the header after 10 seconds');
+      pp('$mm Hiding the header after 5 seconds');
       if (mounted) {
         setState(() {
           isHeaderVisible = false;
@@ -108,7 +110,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     });
 
     try {
-      images = await widget.repository.getExamImages(widget.examLink.id!);
+      images = await widget.downloaderService.getExamImages(widget.examLink);
       pp('$mm exam images found for display: ${images.length}');
       _executeAfterDelay();
     } catch (e) {
@@ -265,7 +267,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             pp('$mm viewer exited and returned here ...images: ${images.length}');
           },
           repository: widget.repository,
-          prompt: prompt,
+          prompt: prompt, examLink: widget.examLink,
         ));
     pp('$mm ... back from Math Viewer');
   }
@@ -379,6 +381,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
 
   @override
   Widget build(BuildContext context) {
+    var bright = MediaQuery.of(context).platformBrightness;
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -413,7 +416,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             ),
           ],
         ),
-        backgroundColor: Colors.brown[100],
+        // backgroundColor: bright == Brightness.light?Colors.brown.shade100:Colors.black,
         body: Stack(
           children: [
             busyLoading
@@ -459,10 +462,11 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                             ),
                             busySending
                                 ? const Positioned(
-                                    top: 240,
+                                    top: 280,
                                     right: 60,
                                     left: 60,
                                     child: BusyIndicator(
+                                      showClock: false,
                                       caption:
                                           'Waiting for SgelaAI ... This may take a minute or two. Please wait. ',
                                     ),

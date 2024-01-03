@@ -11,10 +11,10 @@ class MyContent {
   MyContent({this.parts, this.role});
 
   factory MyContent.fromJson(Map<String, dynamic> json) =>
-      _$ContentFromJson(json);
+      _$MyContentFromJson(json);
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = _$ContentToJson(this);
+    final Map<String, dynamic> data = _$MyContentToJson(this);
 
     return data;
   }}

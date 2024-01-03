@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-
+import 'markdown_widget.dart' as md;
 import '../data/exam_link.dart';
 import '../data/subject.dart';
 import '../repositories/repository.dart';
@@ -167,7 +167,7 @@ class ChatWidgetState extends State<ChatWidget> {
                 child: isMarkDown
                     ? Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: MarkdownWidget(text: responseText),
+                      child: md.MarkdownWidget(text: responseText),
                     )
                     : Text(
                         '${widget.subject.title}',
@@ -231,23 +231,4 @@ class SearchInput extends StatelessWidget {
   }
 }
 
-class MarkdownWidget extends StatelessWidget {
-  const MarkdownWidget({super.key, required this.text});
 
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 8,
-      child: SizedBox(
-        height: 500, width:400,
-        child: Markdown(
-          data: text,
-          selectable: true,
-          controller: ScrollController(),
-        ),
-      ),
-    );
-  }
-}

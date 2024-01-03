@@ -10,10 +10,10 @@ class MyPromptFeedback {
   MyPromptFeedback({this.safetyRatings});
 
   factory MyPromptFeedback.fromJson(Map<String, dynamic> json) =>
-      _$PromptFeedbackFromJson(json);
+      _$MyPromptFeedbackFromJson(json);
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = _$PromptFeedbackToJson(this);
+    final Map<String, dynamic> data = _$MyPromptFeedbackToJson(this);
 
     return data;
   }}

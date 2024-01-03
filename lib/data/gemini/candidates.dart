@@ -14,10 +14,10 @@ class MyCandidates {
   MyCandidates({this.content, this.finishReason, this.index, this.safetyRatings});
 
   factory MyCandidates.fromJson(Map<String, dynamic> json) =>
-      _$CandidatesFromJson(json);
+      _$MyCandidatesFromJson(json);
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = _$CandidatesToJson(this);
+    final Map<String, dynamic> data = _$MyCandidatesToJson(this);
 
     return data;
   }}

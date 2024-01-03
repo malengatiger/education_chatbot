@@ -12,7 +12,8 @@ GeminiResponseRating _$GeminiResponseRatingFromJson(
       rating: json['rating'] as int?,
       date: json['date'] as String?,
       id: json['id'] as int?,
-      examPageImageId: json['examPageImageId'] as int?,
+      pageNumber: json['pageNumber'] as int?,
+      examLinkId: json['examLinkId'] as int?,
       responseText: json['responseText'] as String?,
       prompt: json['prompt'] as String?,
     );
@@ -23,7 +24,8 @@ Map<String, dynamic> _$GeminiResponseRatingToJson(
       'rating': instance.rating,
       'date': instance.date,
       'id': instance.id,
-      'examPageImageId': instance.examPageImageId,
+      'pageNumber': instance.pageNumber,
+      'examLinkId': instance.examLinkId,
       'responseText': instance.responseText,
       'prompt': instance.prompt,
     };

@@ -6,7 +6,7 @@ part of 'gemini_response.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-MyGeminiResponse _$GeminiResponseFromJson(Map<String, dynamic> json) =>
+MyGeminiResponse _$MyGeminiResponseFromJson(Map<String, dynamic> json) =>
     MyGeminiResponse(
       candidates: (json['candidates'] as List<dynamic>?)
           ?.map((e) => MyCandidates.fromJson(e as Map<String, dynamic>))
@@ -17,7 +17,7 @@ MyGeminiResponse _$GeminiResponseFromJson(Map<String, dynamic> json) =>
               json['promptFeedback'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$GeminiResponseToJson(MyGeminiResponse instance) =>
+Map<String, dynamic> _$MyGeminiResponseToJson(MyGeminiResponse instance) =>
     <String, dynamic>{
       'candidates': instance.candidates,
       'promptFeedback': instance.promptFeedback,
