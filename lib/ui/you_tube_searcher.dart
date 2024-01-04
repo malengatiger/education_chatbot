@@ -4,6 +4,7 @@ import 'package:edu_chatbot/util/environment.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:badges/badges.dart' as bd;
+import '../data/subject.dart';
 import '../data/youtube_data.dart';
 import '../services/you_tube_service.dart';
 import '../util/functions.dart';
@@ -13,11 +14,11 @@ class YouTubeSearcher extends StatefulWidget {
   const YouTubeSearcher(
       {super.key,
       required this.youTubeService,
-      required this.subjectId,
+      required this.subject,
       required this.showSearchBox});
 
   final YouTubeService youTubeService;
-  final int subjectId;
+  final Subject subject;
   final bool showSearchBox;
 
   @override
@@ -43,7 +44,7 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
     });
     try {
       videos = await widget.youTubeService.searchByTag(
-          subjectId: widget.subjectId,
+          subjectId: widget.subject.id!,
           maxResults: ChatbotEnvironment.maxResults,
           tagType: 1);
       pp('$mm ... search YouTube found: ${videos.length} ...');
@@ -81,6 +82,8 @@ class YouTubeSearcherState extends State<YouTubeSearcher> {
       child: Scaffold(
           appBar: AppBar(
             title: const Text('YouTube Videos'),
+            bottom: PreferredSize(preferredSize: const Size.fromHeight(32), 
+                child: Text('${widget.subject.title}', style: myTextStyleMediumBold(context),))
           ),
           body: Stack(
             children: [

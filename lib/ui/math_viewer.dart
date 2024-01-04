@@ -86,6 +86,8 @@ class _MathViewerState extends State<MathViewer> {
   @override
   Widget build(BuildContext context) {
     var h = MediaQuery.of(context).size.height;
+    var bright = MediaQuery.of(context).platformBrightness;
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -128,24 +130,23 @@ class _MathViewerState extends State<MathViewer> {
                   }
                 },
                 itemBuilder: (BuildContext bc) {
-                  return const [
+                  return  [
                     PopupMenuItem(
                       value: '/rating',
-                      child: Icon(Icons.star),
+                      child: Icon(Icons.star, color: bright == Brightness.light? Colors.black: Colors.yellow,),
                     ),
                     PopupMenuItem(
                       value: '/share',
-                      child: Icon(Icons.share),
+                      child: Icon(Icons.share,color: Theme.of(context).primaryColor,),
                     ),
                     PopupMenuItem(
                       value: '/rerun',
-                      child: Icon(Icons.search),
+                      child: Icon(Icons.search,color: Theme.of(context).primaryColor,),
                     )
                   ];
                 },
               )
             ]),
-        backgroundColor: Colors.brown[100],
         body: Stack(
           children: [
             Positioned.fill(
@@ -154,7 +155,7 @@ class _MathViewerState extends State<MathViewer> {
                 child: Container(
                   width: double.infinity,
                   // height: h,
-                  padding: const EdgeInsets.all(4.0),
+                  padding: const EdgeInsets.all(2.0),
                   child: Holder(text: getFormattedText()),
                 ),
               ),
@@ -179,7 +180,7 @@ class _MathViewerState extends State<MathViewer> {
                       }
                     });
                   },
-                  visible: _showRatingBar,
+                  visible: _showRatingBar, color: Colors.blue,
                 )),
           ],
         ),
@@ -229,20 +230,6 @@ class _MathViewerState extends State<MathViewer> {
   }
 
   //
-  Future<File> _convertWidgetToImage(BuildContext context) async {
-    RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!
-        .findRenderObject() as RenderRepaintBoundary;
-    ui.Image? image = await boundary.toImage(
-        pixelRatio: MediaQuery.of(context).devicePixelRatio);
-    ByteData? byteData =
-        await image!.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List? pngBytes = byteData?.buffer.asUint8List();
-    File file =
-        await File('${Directory.systemTemp.path}/widget_image.png').create();
-    await file.writeAsBytes(pngBytes!);
-    pp('${MathViewer.mm} 🍎🍎🍎_convertWidgetToImage: 💛file length: ${await file.length()} 💛 path: ${file.path}');
-    return file;
-  }
 }
 
 class Holder extends StatelessWidget {
@@ -252,7 +239,9 @@ class Holder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var bright = MediaQuery.of(context).platformBrightness;
     return Card(
+      // color: Colors.white,
       elevation: 8,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -264,15 +253,19 @@ class Holder extends StatelessWidget {
                 "SgelaAI Response",
                 style: myTextStyle(
                   context,
-                  Colors.black,
+                  bright == Brightness.light? Colors.black: Colors.white,
                   24,
                   FontWeight.w900,
                 ),
               ),
-              gapW16,
+              gapH16,
               Expanded(
                 child: SingleChildScrollView(
-                  child: TeXView(
+                  child: TeXView(style: TeXViewStyle(
+                    contentColor: bright == Brightness.light? Colors.black: Colors.white,
+                    backgroundColor: bright == Brightness.light? Colors.white: Colors.black,
+                    padding: const TeXViewPadding.all(8),
+                  ),
                     renderingEngine: const TeXViewRenderingEngine.katex(),
                     child: TeXViewColumn(
                       children: [

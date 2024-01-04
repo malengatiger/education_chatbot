@@ -5,18 +5,20 @@ import '../util/functions.dart';
 
 class GeminiRatingWidget extends StatelessWidget {
   const GeminiRatingWidget(
-      {super.key, required this.onRating, required this.visible});
+      {super.key, required this.onRating, required this.visible, this.color});
 
   final Function(double) onRating;
   final bool visible;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     pp('GeminiRating ... build, visible: $visible');
+    var brightness = MediaQuery.of(context).platformBrightness;
     return visible
         ? Card(
             elevation: 12,
-            color: Colors.amber[200],
+            color: Colors.black,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: RatingBar.builder(
@@ -26,9 +28,9 @@ class GeminiRatingWidget extends StatelessWidget {
                 allowHalfRating: false,
                 itemCount: 5,
                 itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-                itemBuilder: (context, _) => const Icon(
+                itemBuilder: (context, _) =>  Icon(
                   Icons.star,
-                  color: Colors.indigo,
+                  color: color == null? Colors.pink: color!,
                 ),
                 onRatingUpdate: (rating) {
                   pp('🍎🍎🍎 onRatingUpdate: rating: 🍎$rating 🍎 calling onRating() ...');

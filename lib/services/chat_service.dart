@@ -2,17 +2,19 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart' as dm;
 import 'package:edu_chatbot/util/environment.dart';
 import 'package:flutter_gemini/flutter_gemini.dart' as gm;
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/http.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../data/exam_page_image.dart';
 import '../data/gemini/gemini_response.dart';
 import '../util/dio_util.dart';
 import '../util/functions.dart' as fun;
 import '../util/functions.dart';
+import '../util/image_file_util.dart';
 
 class ChatService {
   static const mm = '💜💜💜💜 ChatService';
@@ -40,18 +42,25 @@ class ChatService {
       http.MultipartRequest request =
           http.MultipartRequest('POST', Uri.parse(url));
       request.fields['prompt'] = prompt;
+      request.fields['mimeType'] = 'image/png';
+      request.fields['linkResponse'] = 'true';
 
       // Add the image files to the request
       for (var i = 0; i < imageFiles.length; i++) {
         var examPageImage = imageFiles[i];
-        var mimeType = "png";
-        examPageImage.mimeType ??= mimeType;
-        var multipartFile = createMultipartFile(examPageImage.bytes!, "file",
+        var file = await ImageFileUtil.createImageFileFromBytes(
+            examPageImage.bytes!, 'imageFile');
+        var mimeType = ImageFileUtil.getMimeType(file);
+        request.fields['mimeType'] = mimeType;
+
+        var multipartFile = ImageFileUtil.createMultipartFile(
+            examPageImage.bytes!,
+            "file",
             "image_${examPageImage.examLinkId}_i$i.${examPageImage.mimeType}");
         request.files.add(multipartFile);
       }
       // Send the request and get the response
-      StreamedResponse response = await request.send();
+      http.StreamedResponse response = await request.send();
       fun.pp('$mm 🥬🥬🥬🥬 Gemini AI returned response ...'
           'statusCode: ${response.statusCode}  🥬🥬🥬🥬reasonPhrase: ${response.reasonPhrase}');
       if (response.statusCode != 200 && response.statusCode != 201) {
@@ -68,6 +77,8 @@ class ChatService {
             '$mm 👿👿👿👿 Gemini AI returned jsonResponse is not a Map 👿👿👿👿');
         throw Exception('Failed to send AI request: jsonResponse is not a Map');
       }
+      fun.pp('$mm  🍎🍎🍎 Gemini AI returned jsonResponse ; '
+          '$jsonResponse  🍎🍎🍎');
 
       MyGeminiResponse geminiResponse =
           MyGeminiResponse.fromJson(jsonResponse['response']);
@@ -80,18 +91,58 @@ class ChatService {
     }
   }
 
-  http.MultipartFile createMultipartFile(
-      List<int> bytes, String fieldName, String filename) {
-    // Create a byte stream from the bytes list
-    var stream = http.ByteStream.fromBytes(bytes);
-    // Get the length of the byte stream
-    var length = bytes.length;
+  Future<MyGeminiResponse> sendExamPageImageAndText(
+      {required String prompt,
+      required String linkResponse,
+      required File file}) async {
+    fun.pp('$mm .... sendMultipartRequest starting ... 💙'
+        'prompt: $prompt 💙linkResponse: $linkResponse 💙file: ${file.path}');
+    try {
+      String urlPrefix = ChatbotEnvironment.getGeminiUrl();
+      String url = '${urlPrefix}textImage/sendTextImagePrompt';
+      String mimeType = ImageFileUtil.getMimeType(file);
+      fun.pp('$mm .... mimeType: $mimeType 🍎 '
+          'url: $url');
+      dm.Dio dio = dm.Dio();
+      dm.FormData formData = dm.FormData.fromMap({
+        'prompt': prompt,
+        'mimeType': mimeType,
+        'linkResponse': linkResponse,
+        'file': await dm.MultipartFile.fromFile(file.path,
+            contentType: MediaType.parse(mimeType)),
+      });
 
-    // Create the multipart file object
-    var multipartFile =
-        http.MultipartFile(fieldName, stream, length, filename: filename);
-
-    return multipartFile;
+      dm.Response response = await dio.post(
+        url,
+        data: formData,
+      );
+      pp('$mm ............................ response returned ....');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        fun.pp(
+            '$mm .... multiPart request is OK! status: ${response.statusCode} '
+            ' 🍎 message: ${response.statusMessage} ... ');
+        var map = response.data;
+        myPrettyJsonPrint(map);
+        var map2 = map['response'];
+        MyGeminiResponse geminiResponse = MyGeminiResponse.fromJson(map2);
+        if (geminiResponse.candidates == null ||
+            geminiResponse.candidates!.isEmpty) {
+          throw Exception(
+              '👿👿SgelaAI has no response at this time. Please try again!');
+        }
+        if (geminiResponse.candidates!.first.finishReason == 'STOP') {
+          fun.pp('$mm ...... sendMultipartRequest request is good! 💙💙💙');
+          return geminiResponse;
+        } else {
+          throw Exception(
+              '👿👿SgelaAI could not handle your request. Please try again!');
+        }
+      } else {
+        throw Exception('$mm 👿👿👿👿Failed to send multipart request');
+      }
+    } catch (e) {
+      throw Exception('$mm 👿👿👿👿Error sending multipart request: $e');
+    }
   }
 
   Future<String> sendChatPrompt(String prompt) async {
@@ -136,7 +187,7 @@ class ChatService {
       File imageFile, String prompt) async {
     var length = await imageFile.length();
     fun.pp('$mm .... sendGenericImageTextPrompt starting ... '
-        'imageFile: ${(length/1024/1024).toStringAsFixed(2)} MB');
+        'imageFile: ${(length / 1024 / 1024).toStringAsFixed(2)} MB');
     var compressed = await compressImage(file: imageFile, quality: 80);
     if (compressed == null) {
       throw Exception('File is fucked!');
@@ -150,13 +201,14 @@ class ChatService {
       }
       var compLength2 = await compressed.length();
       if (compLength2 > (1024 * 1024 * 3)) {
-        throw Exception('Image file too big: ${(compLength2 / 1024 / 1024).toStringAsFixed(2)} MB');
+        throw Exception(
+            'Image file too big: ${(compLength2 / 1024 / 1024).toStringAsFixed(2)} MB');
       }
     }
     var compLength2 = await compressed.length();
 
     fun.pp('$mm .... sendGenericImageTextPrompt starting ... '
-        'compressed imageFile: ${(compLength2/1024/1024).toStringAsFixed(2)} MB');
+        'compressed imageFile: ${(compLength2 / 1024 / 1024).toStringAsFixed(2)} MB');
     String urlPrefix = ChatbotEnvironment.getGeminiUrl();
     String url = '${urlPrefix}textImage/sendTextImagePrompt';
     fun.pp('$mm sendImageTextPrompt: will send : $url ...');
@@ -170,13 +222,14 @@ class ChatService {
       var stream = http.ByteStream(compressed.openRead());
       // var multipartFile0 = http.MultipartFile("file", stream, length);
       List<int> bytes = await stream.toBytes();
-      var multipartFile = createMultipartFile(bytes, 'file', 'myfile.jpg');
+      var multipartFile =
+          ImageFileUtil.createMultipartFile(bytes, 'file', 'myfile.jpg');
       fun.pp('$mm sendImageTextPrompt: will send multipartFile :'
           ' ${multipartFile.length} bytes ...');
 
       request.files.add(multipartFile);
       // Send the request and get the response
-      StreamedResponse response = await request.send();
+      http.StreamedResponse response = await request.send();
       fun.pp('$mm 🥬🥬🥬🥬 Gemini AI returned response ...'
           'statusCode: ${response.statusCode}  🥬🥬🥬🥬reasonPhrase: ${response.reasonPhrase}');
       if (response.statusCode != 200 && response.statusCode != 201) {

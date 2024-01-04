@@ -60,7 +60,7 @@ class _BusyIndicatorState extends State<BusyIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    var height = 160.0;
+    var height = 180.0;
     var show = false;
     if (widget.showClock != null) {
       if (widget.showClock!) {
@@ -68,6 +68,8 @@ class _BusyIndicatorState extends State<BusyIndicator> {
         show = widget.showClock!;
       }
     }
+    var bright = MediaQuery.of(context).platformBrightness;
+
     return Card(
       elevation: widget.elevation,
       child: Center(
@@ -88,7 +90,7 @@ class _BusyIndicatorState extends State<BusyIndicator> {
                     strokeWidth: 6.0,
                   ),
                 ),
-                gapH8,
+                gapH16,
                 widget.caption == null
                     ? gapW8
                     : Text(widget.caption!, style: myTextStyleSmall(context)),
@@ -101,7 +103,7 @@ class _BusyIndicatorState extends State<BusyIndicator> {
                     gapW16,
                     Text(elapsedTime,
                         style: myTextStyle(
-                            context, Colors.pink, 18, FontWeight.bold)),
+                            context, bright == Brightness.light? Colors.red: Colors.yellow, 18, FontWeight.bold)),
                   ],
                 ),
                 gapH8,

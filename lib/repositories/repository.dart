@@ -9,6 +9,7 @@ import 'package:edu_chatbot/services/local_data_service.dart';
 import 'package:edu_chatbot/util/dio_util.dart';
 import 'package:edu_chatbot/util/environment.dart';
 import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
 import 'package:path/path.dart' as path;
 
 import '../data/exam_link.dart';
@@ -42,7 +43,7 @@ class Repository {
       for (var imgFile in imageFiles) {
         var img = ExamPageImage(examLink.id!, null,
             examLink.pageImageZipUrl, imgFile.readAsBytesSync(),
-            index, 'png');
+            index, getMimeType(imgFile));
         await localDataService.addExamImage(img);
         images.add(img);
         index++;
@@ -60,6 +61,35 @@ class Repository {
     }
   }
 
+  Future<File> createImageFileFromBytes(List<int> bytes, String filePath) async {
+    final file = File(filePath);
+
+    // Determine the file extension based on the content
+    String fileExtension = '';
+    if (bytes.length >= 4) {
+      if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) {
+        fileExtension = '.png';
+      } else if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[bytes.length - 2] == 0xFF && bytes[bytes.length - 1] == 0xD9) {
+        fileExtension = '.jpg';
+      }
+    }
+
+    // If the file extension is still empty, fallback to .jpeg
+    if (fileExtension.isEmpty) {
+      fileExtension = '.jpeg';
+    }
+
+    // Append the file extension to the file path
+    String finalFilePath = filePath + fileExtension;
+
+    await file.writeAsBytes(bytes);
+    return file.renameSync(finalFilePath);
+  }
+  String getMimeType(File file) {
+    final mimeTypeResolver = MimeTypeResolver();
+    final mimeType = mimeTypeResolver.lookup(file.path);
+    return mimeType ?? 'application/octet-stream';
+  }
   Future<List<GeminiResponseRating>> getRatings(int examLinkId) async {
     pp('$mm ... getRatings ....');
     List<GeminiResponseRating> ratings = [];
@@ -80,15 +110,17 @@ class Repository {
     }
   }
 
-  Future<GeminiResponseRating> addRating(GeminiResponseRating rating) async {
+  Future<List<dynamic>> addRating(GeminiResponseRating rating) async {
     pp('$mm .......... addRating: ${rating.rating}');
     String urlPrefix = ChatbotEnvironment.getSkunkUrl();
     var path = '${urlPrefix}links/addResponseRating';
     try {
-      var res = await dioUtil.sendPostRequest(path, rating.toJson());
-      var r = GeminiResponseRating.fromJson(res);
-      pp('$mm ... rating added to db .... rating: ${r.rating}');
-      return r;
+      List res = await dioUtil.sendPostRequest(path, rating.toJson());
+      for (var value in res) {
+        pp('$mm .......... addRating response is Firestore id: $value');
+
+      }
+      return res;
     } catch (e) {
       // Handle any errors
       pp('Error calling addResponseRating API: $e');

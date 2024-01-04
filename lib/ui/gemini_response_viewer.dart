@@ -55,8 +55,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
           prompt: widget.prompt, examLinkId: widget.examLink.id!);
 
       var res = await widget.repository.addRating(gr);
-      pp('$mm 💙💙💙💙 GeminiResponseRating sent to backend!');
-      myPrettyJsonPrint(res.toJson());
+      pp('$mm 💙💙💙💙 GeminiResponseRating sent to backend!  🍎🍎🍎response: $res');
     } catch (e) {
       pp('$mm ERROR - $e');
     }
@@ -115,7 +114,7 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
                     child: Text('SgelaAI Response',
                         style: myTextStyle(
                             context,
-                            bright == Brightness.dark?Colors.white:Theme.of(context).primaryColor,
+                            bright == Brightness.dark?Colors.black:Theme.of(context).primaryColor,
                             20,
                             FontWeight.w900)),
                   ),
@@ -140,19 +139,21 @@ class _GeminiResponseViewerState extends State<GeminiResponseViewer> {
             _showRatingBar
                 ? Positioned(
                     bottom: 12,
-                    left: 12,
-                    child: GeminiRatingWidget(
-                        onRating: (mRating) {
-                          if (mounted) {
-                            setState(() {
-                              isRated = true;
-                              ratingUpdated = mRating.round();
-                            });
-                          }
-                          _sendRating(mRating.round());
-                          Navigator.of(context).pop();
-                        },
-                        visible: true),
+                    left: 12, right:12,
+                    child: Center(
+                      child: GeminiRatingWidget(
+                          onRating: (mRating) {
+                            if (mounted) {
+                              setState(() {
+                                isRated = true;
+                                ratingUpdated = mRating.round();
+                              });
+                            }
+                            _sendRating(mRating.round());
+                            Navigator.of(context).pop();
+                          },
+                          visible: true),
+                    ),
                   )
                 : gapW8,
           ],

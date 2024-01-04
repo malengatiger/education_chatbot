@@ -20,6 +20,7 @@ import '../data/exam_page_image.dart';
 import '../data/gemini/gemini_response.dart';
 import '../services/chat_service.dart';
 import '../util/functions.dart';
+import '../util/image_file_util.dart';
 
 class ExamPaperPages extends StatefulWidget {
   final ExamLink examLink;
@@ -31,7 +32,8 @@ class ExamPaperPages extends StatefulWidget {
       {super.key,
       required this.examLink,
       required this.repository,
-      required this.chatService, required this.downloaderService});
+      required this.chatService,
+      required this.downloaderService});
 
   @override
   ExamPaperPagesState createState() => ExamPaperPagesState();
@@ -121,8 +123,8 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     }
     if (mounted) {
       setState(() {
-            busyLoading = false;
-          });
+        busyLoading = false;
+      });
     }
   }
 
@@ -267,12 +269,14 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
             pp('$mm viewer exited and returned here ...images: ${images.length}');
           },
           repository: widget.repository,
-          prompt: prompt, examLink: widget.examLink,
+          prompt: prompt,
+          examLink: widget.examLink,
         ));
     pp('$mm ... back from Math Viewer');
   }
 
   String responseText = '';
+
   _onSubmit() async {
     pp('$mm submitting the whole thing to Gemini AI : image files: ${selectedImages.length}');
 
@@ -286,8 +290,11 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     prompt = getPrompt(widget.examLink.subjectTitle!);
     MyGeminiResponse? response;
     try {
-      response =
-          await widget.chatService.sendImageTextPrompt(selectedImages, prompt);
+      var examPageImage = selectedImages.first;
+      File file = await ImageFileUtil.createImageFileFromBytes(
+          examPageImage.bytes!, 'imageFile');
+      response = await widget.chatService.sendExamPageImageAndText(
+          prompt: prompt, linkResponse: 'false', file: file);
       pp('$mm 😎 😎 😎 Gemini AI has responded! .... 😎 😎 😎');
       // myPrettyJsonPrint(response.toJson());
       responseText = _getResponseString(response);
@@ -362,19 +369,17 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
     return sb.toString();
   }
 
-
-
   String getPrompt(String subject) {
     switch (subject) {
       case 'MATHEMATICS':
-        return "Solve the problem in the image. Explain each step in detail. "
-            "Use well structured Latex(Math) format in your response. "
+        return "Solve the problem in the image. Explain each step in detail. \n"
+            "Use well structured Latex(Math) format in your response. \n"
             "Use paragraphs and/or sections to optimize and enhance readability";
       default:
-        return "Help me with this. Explain each step of the solution in detail. "
-            "Use examples where appropriate. "
-            "Responses must be at the high school and college freshman level"
-            "Response text must be in markdown format. "
+        return "Help me with this. Explain each step of the solution in detail. \n"
+            "Use examples where appropriate. \n"
+            "Responses must be at the high school and college freshman level.\n"
+            "Response text must be in markdown format. \n"
             "Use paragraphs and/or sections to optimize and enhance readability\n";
     }
   }
@@ -482,9 +487,7 @@ class ExamPaperPagesState extends State<ExamPaperPages> {
                 left: 12,
                 child: Text(
                   '${currentPageIndex + 1}',
-                  style:
-                      myTextStyle(context, Colors.blue, 36,
-                          FontWeight.w900),
+                  style: myTextStyle(context, Colors.blue, 36, FontWeight.w900),
                 )),
             if (isHeaderVisible) // Conditionally show the ExamPaperHeader
               Positioned(

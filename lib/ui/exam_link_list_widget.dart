@@ -222,7 +222,7 @@ class ExamLinkListWidgetState extends State<ExamLinkListWidget> {
   void _navigateToYouTube() {
     pp('$mm _navigateToYouTube ... widget.subject.id: ${widget.subject.id}');
     NavigationUtils.navigateToPage(context: context, widget: YouTubeSearcher(
-        youTubeService: widget.youTubeService, subjectId: widget.subject.id!, showSearchBox: true,));
+        youTubeService: widget.youTubeService, subject: widget.subject, showSearchBox: true,));
   }
 }
 

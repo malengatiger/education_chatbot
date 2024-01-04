@@ -2,6 +2,7 @@ import 'package:badges/badges.dart' as bd;
 import 'package:edu_chatbot/data/subject.dart';
 import 'package:edu_chatbot/repositories/repository.dart';
 import 'package:edu_chatbot/services/downloader_isolate.dart';
+import 'package:edu_chatbot/ui/busy_indicator.dart';
 import 'package:edu_chatbot/util/dark_light_control.dart';
 import 'package:edu_chatbot/util/functions.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,7 @@ class SubjectSearchState extends State<SubjectSearch> {
   final TextEditingController _searchController = TextEditingController();
   List<Subject> _subjects = [];
   List<Subject> _filteredSubjects = [];
-
+  bool busy = false;
   @override
   void initState() {
     super.initState();
@@ -45,17 +46,20 @@ class SubjectSearchState extends State<SubjectSearch> {
   }
 
   void _getSubjects() async {
+    setState(() {
+      busy = true;
+    });
     try {
-      List<Subject> subjects = await widget.repository.getSubjects(false);
-      subjects.sort((a, b) => a.title!.compareTo(b.title!));
-      setState(() {
-        _subjects = subjects;
-        _filteredSubjects = subjects;
-      });
+      _subjects = await widget.repository.getSubjects(false);
+      _subjects.sort((a, b) => a.title!.compareTo(b.title!));
+      _filteredSubjects = _subjects;
     } catch (e) {
       // Handle error
-      pp('Error fetching subjects: $e');
+      pp('Error fetching _subjects: $e');
     }
+    setState(() {
+      busy = false;
+    });
   }
 
   void _filterSubjects(String query) {
@@ -157,7 +161,9 @@ class SubjectSearchState extends State<SubjectSearch> {
                         padding: const EdgeInsets.all(8.0),
                         badgeColor: Colors.pink.shade800,
                         elevation: 12),
-                    child: ListView.builder(
+                    child: busy? const BusyIndicator(
+                      caption: 'Loading subjects'
+                    ): ListView.builder(
                       itemCount: _filteredSubjects.length,
                       itemBuilder: (context, index) {
                         Subject subject = _filteredSubjects[index];
